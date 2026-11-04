@@ -1,0 +1,6 @@
+{
+  "source": "acg138_c1_localmap_20261026/third_party/sdk",
+  "sdk_version": "2.1.0 baseline copy",
+  "modified": false,
+  "timestamp_api": "grabScanDataHqWithTimeStamp; estimated host-monotonic, not a C1 hardware accuracy claim"
+}

@@ -1,0 +1,10 @@
+"""离线测试通过后生成本地标定来源核验记录。"""
+from pathlib import Path
+import json,hashlib
+r=Path(__file__).resolve().parents[1];sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+q=r/'validation/stereo-calibration/result.json';j=json.loads(q.read_text(encoding='utf8'));assert j['status']=='PASS'
+sources=[r/'calibration/prepare_measured_s3.py',r/'calibration/export_mono_s3.py',r/'calibration/README_S3.md',r/'objects/export_calibration.py',r/'tests/stereo_calibration/run.py',Path(__file__)]
+for name,digest in j['sources'].items():assert sha(r/name)==digest,('Changed after test',name)
+artifacts=[p for p in(r/'runtime/calibration').glob('*')if p.is_file()]+[r/'calibration/measured/stereo-initial-fit.npz',r/'calibration/measured/stereo-initial-fit.npz.json',r/'calibration/measured/detected-paired-corners.npz',q]
+proof={'status':'PASS','module':'measured-calibration-s3','test_scope':'Offline measured calibration/provenance and real exporter regression, not hardware accuracy','source_snapshot':{p.relative_to(r).as_posix():sha(p)for p in sources},'artifacts':{p.relative_to(r).as_posix():sha(p)for p in artifacts},'command':'python tests/stereo_calibration/run.py','raw_log_sha256':sha(r/'calibration/offline-checks.log'),'fit_pairs':67,'rms_px':j['rms_px'],'baseline_m':j['baseline_m'],'withheld_detected':j['heldout_detected'],'withheld_quality_accepted':j['heldout_quality_accepted'],'withheld_quality_rejected':j['heldout_quality_rejected'],'withheld_detection_rejected':j['heldout_detection_rejected'],'cached_refit_without_original_pngs':True,'tampered_cache_rejected':True,'runtime_table_bytes':(r/'runtime/calibration/objects-calibration.bin').stat().st_size,'physical_left_eye':0,'physical_eye_order_verified_by_user':True,'hardware_accuracy_verified':False,'camera_to_body_verified':False,'board_tested':False,'motor_commands_sent':False}
+(r/'validation/calibration-s3-result.json').write_text(json.dumps(proof,ensure_ascii=False,indent=2)+'\n',encoding='utf8');print('PASS frozen measured calibration proof')

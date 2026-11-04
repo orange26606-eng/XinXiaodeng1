@@ -1,0 +1,40 @@
+#ifndef ACG_S5_STATUS_TEXT_H
+#define ACG_S5_STATUS_TEXT_H
+#include <string.h>
+static inline const char*s5_reason_zh(const char*r){
+ if(!r)return "等待状态";
+ if(strstr(r,"SOURCE_CONTEXT_REBUILT"))return "数据源已自动重连，等待真实新数据后继续任务";
+ if(strstr(r,"REPROJECTED"))return "目标已按重启前相对位置估计重建，正在重新规划";
+ if(strstr(r,"MAP_ID_CHANGED_REPLANNING"))return "地图已重建，任务保留并重新规划";
+ if(strstr(r,"LATENCY_INTERVAL_CONFLICT"))return "单笔时钟区间异常已过滤，继续接收新数据";
+ if(strstr(r,"ODOMETRY_CONTEXT_AUTO_REASSOCIATING"))return "保留原目标身份，已清除旧坐标并自动重新关联";
+ if(strstr(r,"POSE_INVALID_DROP_ONE"))return "已过滤一笔无效位姿，可信数据年龄继续计时";
+ if(strstr(r,"COMPUTE_BUDGET")||strstr(r,"COMPUTE_WAIT"))return "本轮计算预算用完，保留路线并等待下轮，不代表有障碍";
+ if(strstr(r,"MEASURED_MOTION_BRAKE"))return "当前实际速度的制动空间不足，先刹车，保留路线";
+ if(strstr(r,"ROUTE_CURVATURE_PRESERVED"))return "沿原路线减速，保持转向方向";
+ if(strstr(r,"ROUTE_PREFERRED_CLEAR"))return "原路线动作可行，按预览方向行驶";
+ if(strstr(r,"ROUTE_SIDE_REJECTED"))return "路线方向动作被拒绝，已核查另一侧动作可行";
+ if(strstr(r,"FRONT_UNDER_30"))return "前方净空不足30毫米，改查转向或短段后退，目标保留";
+ if(strstr(r,"RELEASE_40"))return "等待两笔新的至少40毫米观测解除前方近障";
+ if(strstr(r,"FPGA_POLICY_MISMATCH"))return "FPGA策略版本不匹配，自动模式未启动";
+ if(strstr(r,"NF_EMERGENCY"))return "前方紧急近障，先刹车并复核";
+ if(strstr(r,"SONAR_GLITCH_RELEASE"))return "单笔近障毛刺已复核解除";
+ if(strstr(r,"FRONT_APPROACH"))return "前方进入100毫米观察区，优先减速保持原路线";
+ if(strstr(r,"NEAR_AVOID"))return "当前方向近障，检查转向或短段后退，保留目标";
+ if(strstr(r,"SIDE_ACTION_REJECT"))return "该动作压缩侧方空间，选择其他动作";
+ if(strstr(r,"TURN_HOLD"))return "转向已完成，等待两笔新观测再前进";
+ if(strstr(r,"PATH_ACTION_MISMATCH"))return "参考路线与当前动作不一致，以实际动作为准";
+ if(strstr(r,"REAR_BLOCKED"))return "后方路径有障碍，禁止硬退";
+ if(strstr(r,"REAR_UNOBSERVED")||strstr(r,"REAR_UNKNOWN"))return "后方未充分观测，等待其他可行动作";
+ if(strstr(r,"BACKUP")||strstr(r,"REVERSE"))return "按实际位移后退腾挪";
+ if(strstr(r,"REJOIN"))return "短段恢复后重新检查原路线，不强制固定角度转向";
+ if(strstr(r,"RECOVERY_WAIT"))return "暂时没有可执行动作，保留目标并等待恢复";
+ if(strstr(r,"MAP_EXPORT_STALLED"))return "地图导出停滞，保留最后有效地图";
+ if(strstr(r,"MOTOR")||strstr(r,"FAULT"))return "电机或底盘故障，查看具体反馈原因";
+ if(strstr(r,"STALE")||strstr(r,"EXPIRED"))return "原始数据或控制租约过期";
+ if(strstr(r,"CANCEL")||strstr(r,"MANUAL_OVERRIDE"))return "已取消或手动接管";
+ if(strstr(r,"ARRIVED")||strstr(r,"GOAL_REACHED"))return "已到达目标，保持停车";
+ if(strstr(r,"DRIVE")||strstr(r,"TRACK")||strstr(r,"CRUISE"))return "正在运行，按前方净空调整动作";
+ return "当前状态与具体原因见下方代码";
+}
+#endif

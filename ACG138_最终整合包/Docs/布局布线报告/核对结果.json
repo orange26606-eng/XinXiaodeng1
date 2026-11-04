@@ -1,0 +1,35 @@
+{
+  "bitstream": "phone_robot_final_auto_nearstop.fs",
+  "sha256": "78a55ea388a3af2670ccc690cabedfdb10f6e4cd384056044586f10f20fd8c4d",
+  "bytes": 18396863,
+  "tool": "Gowin V1.9.12.03",
+  "device": "GW5AT-LV60PG484AC1/I0",
+  "Setup_violations": 0,
+  "Hold_violations": 0,
+  "minimum_reported_slack_ns": 0.031,
+  "Logic": [
+    35436,
+    59904
+  ],
+  "Register": [
+    26510,
+    60780
+  ],
+  "CLS": [
+    25797,
+    29952
+  ],
+  "IO": [
+    89,
+    297
+  ],
+  "BSRAM": [
+    22,
+    118
+  ],
+  "DSP": [
+    15.5,
+    118
+  ],
+  "external_io_timing_signed_off": false
+}

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "runtime": "sherpa-onnx v2.0.1",
+  "model": "streaming-zipformer-small-ctc-zh-int8-2025-04-01",
+  "sample_rate": 16000,
+  "files": {
+    "model.int8.onnx": {
+      "bytes": 26342340,
+      "sha256": "68c9c943840f7d9cf3e8a4970ba50f404feb5277f611fa82b7e72267786fa84a"
+    },
+    "tokens.txt": {
+      "bytes": 13366,
+      "sha256": "6fed8c6c248516f38e7faa19404b57413e8ce259f1cbc1fa4aebc86eac32fdfd"
+    }
+  },
+  "archive_sha256": "b3b309f7ce4a737195fcc6963ea19b0653a7d3401580af5ae0d3e284cbb71f0b",
+  "source": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-small-ctc-zh-int8-2025-04-01.tar.bz2"
+}

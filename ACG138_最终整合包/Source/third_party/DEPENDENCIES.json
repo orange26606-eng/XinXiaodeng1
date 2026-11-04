@@ -1,0 +1,51 @@
+{
+  "source_apk_sha256": "d582de89ae3b77af5a0f5694b47ad6a81ab09bfe238fea28305e5fda03b095f5",
+  "files": [
+    {
+      "file": "Source/third_party/sherpa/classes.jar",
+      "bytes": 245045,
+      "sha256": "0ee4991c56c19ef5a8a573b01891193d7298ffe7ebcc68f42b944361d8869d93"
+    },
+    {
+      "file": "Source/third_party/kotlin-stdlib-2.0.21.jar",
+      "bytes": 1747660,
+      "sha256": "f31cc53f105a7e48c093683bbd5437561d1233920513774b470805641bedbc09"
+    },
+    {
+      "file": "Source/android/app/src/main/assets/sherpa-zh/model-manifest.json",
+      "bytes": 687,
+      "sha256": "ced89e79194bc22a5a90b17507a091643a4425da6114481cfd4acb1d11b05573"
+    },
+    {
+      "file": "Source/android/app/src/main/assets/sherpa-zh/model.int8.onnx",
+      "bytes": 26342340,
+      "sha256": "68c9c943840f7d9cf3e8a4970ba50f404feb5277f611fa82b7e72267786fa84a"
+    },
+    {
+      "file": "Source/android/app/src/main/assets/sherpa-zh/tokens.txt",
+      "bytes": 13366,
+      "sha256": "6fed8c6c248516f38e7faa19404b57413e8ce259f1cbc1fa4aebc86eac32fdfd"
+    },
+    {
+      "file": "Source/android/app/src/main/jniLibs/arm64-v8a/libonnxruntime.so",
+      "bytes": 22249560,
+      "sha256": "33847ad43bffe204699fd4a27f7f3603452a8cdaf2f9a44983a0bc31ffcf2da1"
+    },
+    {
+      "file": "Source/android/app/src/main/jniLibs/arm64-v8a/libsherpa-onnx-c-api.so",
+      "bytes": 4303136,
+      "sha256": "0eadae93c4d595a26584d7eebde7b397b9a36d01eee3ebc7262e0d34df2fce10"
+    },
+    {
+      "file": "Source/android/app/src/main/jniLibs/arm64-v8a/libsherpa-onnx-cxx-api.so",
+      "bytes": 272848,
+      "sha256": "de94e0952a124eb22e86d754e11aa0489a065affc837911a8ed5e7fd843baad6"
+    },
+    {
+      "file": "Source/android/app/src/main/jniLibs/arm64-v8a/libsherpa-onnx-jni.so",
+      "bytes": 4609320,
+      "sha256": "5db8f89f12b2c900a98c9e01e00c475c59db35e9437a62e36e27839ec48b5575"
+    }
+  ],
+  "delivery_apk_sha256": "d9066bbba5c1e946773f401e66c5e35b166f47f0e2a7759786c153ff97c38ce4"
+}

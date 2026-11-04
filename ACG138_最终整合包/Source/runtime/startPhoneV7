@@ -1,0 +1,168 @@
+#!/bin/sh
+# 手机图像导出与服务启动器，前台管理子进程，保持Wi-Fi配置。
+# 手动控制接口独立运行，可选相机使用单独的伪终端。
+set -eu
+umask 077
+
+APP=${PHONE_APP_DIR:-/root/acg138-phone}
+V7=${PHONE_V7_DIR:-/root/camera_imu_robot_v7}
+RUN=${PHONE_RUN_DIR:-/run/acg138-phone-onekey}
+LOGS=${PHONE_LOG_DIR:-$APP/onekey-logs}
+FPGA_IFACE=${PHONE_FPGA_IFACE:-eth0}
+SYS=${PHONE_SYS_DIR:-/sys}
+CAMERA_LOCK=${PHONE_CAMERA_LOCK:-/tmp/camera-imu.lock}
+START_TIMEOUT=${PHONE_START_TIMEOUT:-120}
+STOP_TIMEOUT=${PHONE_STOP_TIMEOUT:-20}
+export ACG_PHONE_DIR=${ACG_PHONE_DIR:-/run/acg138-phone}
+export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run}
+export WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-0}
+export CAMERA_IMU_OUTPUT=${CAMERA_IMU_OUTPUT:-auto}
+export ACG_PHONE_VIDEO_FIT=${ACG_PHONE_VIDEO_FIT:-yolo640}
+case $START_TIMEOUT:$STOP_TIMEOUT in *[!0-9:]*|:*|*:) echo '超时参数必须是正整数。' >&2;exit 2;; esac
+[ "$START_TIMEOUT" -gt 0 ] && [ "$STOP_TIMEOUT" -gt 0 ] || exit 2
+
+say(){ printf '%s\n' "$*"; }
+fail(){ say "错误：$*" >&2;exit 1; }
+birth(){
+    [ -r "/proc/$1/stat" ] || return 0
+    sed 's/^.*) //' "/proc/$1/stat" 2>/dev/null | awk '$1 != "Z" {print $20}'
+}
+record(){
+    stamp=$(birth "$1")
+    [ -n "$stamp" ] || return 1
+    printf '%s %s\n' "$1" "$stamp" > "$2"
+}
+alive(){
+    [ -r "$1" ] || return 1
+    IFS=' ' read -r saved_pid saved_birth < "$1" || return 1
+    case $saved_pid:$saved_birth in *[!0-9:]*|:*|*:) return 1;; esac
+    [ "$saved_pid" -gt 1 ] && [ -n "$saved_birth" ] &&
+        [ "$(birth "$saved_pid")" = "$saved_birth" ] && kill -0 "$saved_pid" 2>/dev/null
+}
+signal_owned(){
+    if alive "$1"; then kill "-$2" "$saved_pid" 2>/dev/null || :;fi
+}
+wait_gone(){
+    left=$2
+    while alive "$1"; do
+        [ "$left" -gt 0 ] || return 1
+        sleep 1;left=$((left-1))
+    done
+}
+release_lock(){
+    rm -f "$RUN/ready" "$RUN/display.pid" "$RUN/server.pid" "$RUN/owner.pid"
+    rmdir "$RUN/lock" 2>/dev/null || :
+}
+stop_children(){
+    signal_owned "$RUN/server.pid" TERM
+    if ! wait_gone "$RUN/server.pid" 5; then
+        signal_owned "$RUN/server.pid" KILL
+        wait_gone "$RUN/server.pid" 2 || return 1
+    fi
+    signal_owned "$RUN/display.pid" TERM
+    if ! wait_gone "$RUN/display.pid" "$STOP_TIMEOUT"; then
+        say "显示程序仍在清理，保留进程记录；稍后运行 $0 stop 重试。" >&2
+        return 1
+    fi
+}
+cleanup(){
+    rc=$?
+    trap - EXIT INT TERM HUP
+    if stop_children;then
+        release_lock
+        say '摄像头和手机服务已退出。'
+    else rc=1;fi
+    exit "$rc"
+}
+status(){
+    if alive "$RUN/owner.pid";then
+        if [ -f "$RUN/ready" ];then say '状态：正在运行。';else say '状态：启动中。';fi
+    elif alive "$RUN/display.pid" || alive "$RUN/server.pid";then
+        say "状态：仍有本脚本的子进程，请执行 $0 stop。"
+        return 1
+    else say '状态：未运行。';fi
+    if [ -r "$RUN/log-path" ];then printf '日志目录：';cat "$RUN/log-path";fi
+}
+
+case ${1:-start} in
+    status) status;exit $?;;
+    stop)
+        if alive "$RUN/owner.pid";then
+            signal_owned "$RUN/owner.pid" TERM
+            wait_gone "$RUN/owner.pid" $((STOP_TIMEOUT+10)) || fail '启动脚本仍在退出，请查看日志。'
+        fi
+        stop_children || exit 1
+        release_lock;say '已停止。';exit 0;;
+    start) [ "$#" -le 1 ] || fail "用法：$0 [start|stop|status]";;
+    *) fail "用法：$0 [start|stop|status]";;
+esac
+
+[ "$(id -u)" = 0 ] || fail '请在板子上以 root 运行。'
+for program in start-phone-server.sh acg138-phone-server;do
+    [ -x "$APP/$program" ] || fail "缺少可执行文件：$APP/$program"
+done
+[ -d "$SYS/class/net/$FPGA_IFACE" ] || fail "内部 FPGA 网口不存在：$FPGA_IFACE"
+case $WAYLAND_DISPLAY in /*) socket=$WAYLAND_DISPLAY;; *) socket=$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY;; esac
+mkdir -p "$RUN" "$LOGS" "$ACG_PHONE_DIR"
+chmod 700 "$RUN"
+if ! mkdir "$RUN/lock" 2>/dev/null;then
+    if alive "$RUN/owner.pid";then status;exit 0;fi
+    fail "存在未清理的启动记录，请先执行 $0 stop。"
+fi
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
+record "$$" "$RUN/owner.pid" || fail '无法记录启动会话。'
+SESSION=$(mktemp -d "$LOGS/session.XXXXXX")
+printf '%s\n' "$SESSION" > "$RUN/log-path"
+ln -sfn "$SESSION" "$LOGS/current"
+DISPLAY_LOG=$SESSION/display.log
+SERVER_LOG=$SESSION/server.log
+say "日志目录：$SESSION"
+say '[1/2] 先启动独立手机手动控制服务，不等待相机、IMU、雷达或地图。'
+"$APP/start-phone-server.sh" "$FPGA_IFACE" > "$SERVER_LOG" 2>&1 &
+server_pid=$!
+record "$server_pid" "$RUN/server.pid" || { tail -n 30 "$SERVER_LOG" >&2;fail '手机服务未能启动。'; }
+elapsed=0
+until grep -Fq 'ACG138 phone service :8080' "$SERVER_LOG";do
+    alive "$RUN/server.pid" || { tail -n 30 "$SERVER_LOG" >&2;fail '手机服务启动失败，检查旧服务或端口占用。'; }
+    [ "$elapsed" -lt 10 ] || { tail -n 30 "$SERVER_LOG" >&2;fail '等待手机服务就绪超时。'; }
+    sleep 1;elapsed=$((elapsed+1))
+done
+alive "$RUN/server.pid" || fail '手机服务在就绪时退出。'
+: > "$RUN/ready"
+say '手机服务已就绪，沿用原连接密码；可先连接使用手动控制。'
+address=$(ip -o -4 addr show dev wlan0 scope global 2>/dev/null | awk '$3=="inet" {split($4,a,"/");print a[1];exit}') || address=
+[ -z "$address" ] || say "板子 Wi-Fi 地址：$address:8080"
+say "显示日志：$DISPLAY_LOG"
+say "服务日志：$SERVER_LOG"
+start_display(){
+    alive "$RUN/display.pid" && return 0
+    [ -S "$socket" ] || { printf '%s\n' WAIT_WAYLAND > "$RUN/video-phase";return 1; }
+    [ ! -d "$CAMERA_LOCK" ] || { printf '%s\n' CAMERA_OWNED_ELSEWHERE > "$RUN/video-phase";return 1; }
+    for program in robot-pty start-phone-display.sh camera-imu-panel-phone;do
+        [ -x "$APP/$program" ] || { printf 'MISSING_%s\n' "$program" > "$RUN/video-phase";return 1; }
+    done
+    for program in run-camera-imu-fast run-camera-imu camera-producer camera-imu-panel;do
+        [ -x "$V7/$program" ] || { printf 'MISSING_%s\n' "$program" > "$RUN/video-phase";return 1; }
+    done
+    printf '%s\n' CAMERA_STARTING > "$RUN/video-phase"
+    "$APP/robot-pty" /bin/sh "$APP/start-phone-display.sh" "$V7" > "$DISPLAY_LOG" 2>&1 &
+    display_pid=$!
+    record "$display_pid" "$RUN/display.pid" || return 1
+    say '[2/2] 摄像头在独立会话启动；失败不会关闭手动控制。'
+    return 0
+}
+camera_retry=0
+while :;do
+    alive "$RUN/server.pid" || { tail -n 30 "$SERVER_LOG" >&2;fail '手机服务退出，正在停止显示程序。'; }
+    if alive "$RUN/display.pid";then
+        if [ -s "$ACG_PHONE_DIR/frames.shm" ] && grep -Fq 'Phone export enabled:' "$DISPLAY_LOG";then printf '%s\n' CAMERA_RUNNING > "$RUN/video-phase";fi
+    elif [ "$camera_retry" -le 0 ];then
+        if start_display;then :;fi
+        camera_retry=30
+    fi
+    [ "$camera_retry" -le 0 ] || camera_retry=$((camera_retry-1))
+    sleep 1
+done

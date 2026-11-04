@@ -1,0 +1,38 @@
+源码构建
+
+Source/fpga为Gowin工程。Source/board、objects、sensor、rk和android分别提供手机服务、实物感知、传感器、建图导航、视觉依赖与手机界面代码。
+Source/runtime为运行脚本与配置模板，执行文件使用整合包根目录的RK运行目录。
+
+构建输出
+在Source目录创建build、release和validation子目录。使用ACG138_BUILD_ROOT指定有写权限的英文构建路径，使用ZIG_EXE指定Zig可执行文件。
+
+FPGA
+在Source/fpga目录用Gowin命令行执行build.tcl，保留src、constraints与工程文件的相对位置。
+顶层为camera_dual，器件GW5AT-LV60PG484AC1/I0。构建选项、引脚和时钟约束均由工程入口加载。
+status_*.hex为串口格式化存储器的初始化数据，应随源码保留。
+完整自动检查入口为tools/build_final_fpga.py。
+
+RK
+手机服务入口为tests/semantic_attributes/phone/build_server.py。
+摄像头与IMU显示入口为tools/build_auto_panel.py。
+建图导航入口为tools/build_merge_r81.py --rk-only。
+实物感知入口为tools/build_merge_r81.py --objects-only。
+传感器与其他模块使用各自目录内的构建入口。交叉编译需要AArch64系统头文件、Wayland声明库及对应运行依赖。
+构建后可用tools/strip_runtime_symbols.py移除ELF调试段；工具同时核对可加载段，处理结果写入指定报告文件。
+
+Android
+android_tools/build_apk.py使用Android SDK、ECJ、D8和JDK 17构建，--tools指定SDK工具缓存，--keystore指定自行保管的签名密钥。
+签名密码通过ACG138_KEYSTORE_PASS和ACG138_KEY_PASS环境变量传入。密钥及密码不随工程分发。
+third_party目录提供Sherpa和Kotlin构建依赖；模型资产与JNI库位于android/app/src/main。来源与校验记录见third_party/依赖说明.txt及DEPENDENCIES.json。
+安装现有APK无需配置这些构建工具。
+
+回归
+自动避障使用tools/test_auto_merge.py。
+线路优化使用tools/test_route_opt.py。
+平滑转向使用tools/test_smooth_search.py。
+语义控制使用tools/test_semantic_chain.py。
+手机自动模式事务使用tools/test_auto_phone.py。
+RTL仿真需要Vivado命令行仿真工具，软件测试需要Zig；这些工具独立安装。
+
+发布
+tools/pack_delivery.py重新生成各级文件校验清单并打包当前整合目录。发布包不包含编译缓存、测试临时输出或签名密钥。

@@ -1,0 +1,9 @@
+{
+  "source": "FPGA full-vehicle RTL simulation (actual3896-bytecameraUDPstress and real nav_control_link status), not board",
+  "raw_frames": 38,
+  "attitude_frames": 38,
+  "sources": {
+    "tests/yolo_fpgaimu/fpga/artifacts/vehicle-wire.hex": "b635268e367abe1d33f0e5cb9d2fad4c5f2bbf2678a234a04d4e58f755866562",
+    "tests/yolo_fpgaimu/fpga/artifacts/sample-attitude.bin": "85336cd27d8ab09a7535c3557c71d25a7b1425187465ee5312b5ceb75afd3133"
+  }
+}

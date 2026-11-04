@@ -1,0 +1,7 @@
+Sherpa中文离线语音集成版
+运行库：sherpa-onnx2.0.1，Apache-2.0。https://github.com/k2-fsa/sherpa-onnx/tree/v2.0.1
+Kotlin标准库2.0.21：Apache-2.0。ONNX Runtime：MIT。完整许可见本目录。
+中文模型：streaming-zipformer-small-ctc-zh-int8-2025-04-01，来自官方ASR模型发布资产。
+https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-small-ctc-zh-int8-2025-04-01
+模型档案未包含独立LICENSE；未将运行库许可冒充模型许可。模型原作者说明及商业使用条件应单独核实。
+模型和依赖校验哈希随源码交付；不会上传麦克风音频。

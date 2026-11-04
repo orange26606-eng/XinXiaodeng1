@@ -1,0 +1,217 @@
+{
+  "source_notices/notice_001.txt": [
+    "Source/board/perception/rknn_api.h"
+  ],
+  "source_notices/notice_003.txt": [
+    "Source/board/video/mpp/mpp_buffer.h",
+    "Source/board/video/mpp/mpp_err.h",
+    "Source/board/video/mpp/mpp_frame.h",
+    "Source/board/video/mpp/mpp_meta.h",
+    "Source/board/video/mpp/mpp_packet.h",
+    "Source/board/video/mpp/mpp_task.h",
+    "Source/board/video/mpp/rk_mpi.h",
+    "Source/board/video/mpp/rk_mpi_cmd.h",
+    "Source/board/video/mpp/rk_type.h",
+    "Source/board/video/mpp/rk_vdec_cmd.h",
+    "Source/board/video/mpp/rk_venc_cfg.h",
+    "Source/board/video/mpp/rk_venc_cmd.h",
+    "Source/board/video/mpp/rk_venc_rc.h",
+    "Source/board/video/mpp/rk_venc_ref.h",
+    "Source/board/video/mpp/vpu.h",
+    "Source/board/video/mpp/vpu_api.h"
+  ],
+  "source_notices/notice_004.txt": [
+    "Source/board/video/mpp/mpp_compat.h"
+  ],
+  "source_notices/notice_005.txt": [
+    "Source/board/video/mpp/mpp_log.h",
+    "Source/board/video/mpp/mpp_log_def.h",
+    "Source/board/video/mpp/rk_hdr_meta_com.h"
+  ],
+  "source_notices/notice_006.txt": [
+    "Source/board/video/mpp/mpp_rc_api.h",
+    "Source/board/video/mpp/mpp_rc_defs.h"
+  ],
+  "source_notices/notice_007.txt": [
+    "Source/board/video/mpp/rk_vdec_cfg.h"
+  ],
+  "source_notices/notice_008.txt": [
+    "Source/fpga/src/vendor/gowin_pll/gowin_pll_mod.v"
+  ],
+  "source_notices/notice_009.txt": [
+    "Source/rk/third_party/slamtec_sdk/include/rplidar.h",
+    "Source/rk/third_party/slamtec_sdk/include/rplidar_driver.h",
+    "Source/rk/third_party/slamtec_sdk/include/rptypes.h"
+  ],
+  "source_notices/notice_010.txt": [
+    "Source/rk/third_party/slamtec_sdk/include/rplidar.h",
+    "Source/rk/third_party/slamtec_sdk/include/rplidar_cmd.h",
+    "Source/rk/third_party/slamtec_sdk/include/rplidar_driver.h",
+    "Source/rk/third_party/slamtec_sdk/include/rplidar_protocol.h",
+    "Source/rk/third_party/slamtec_sdk/src/hal/abs_rxtx.h",
+    "Source/rk/third_party/slamtec_sdk/src/hal/event.h",
+    "Source/rk/third_party/slamtec_sdk/src/hal/locker.h",
+    "Source/rk/third_party/slamtec_sdk/src/hal/thread.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/hal/thread.h",
+    "Source/rk/third_party/slamtec_sdk/src/hal/util.h",
+    "Source/rk/third_party/slamtec_sdk/src/sdkcommon.h"
+  ],
+  "source_notices/notice_011.txt": [
+    "Source/rk/third_party/slamtec_sdk/include/rplidar_cmd.h"
+  ],
+  "source_notices/notice_012.txt": [
+    "Source/rk/third_party/slamtec_sdk/include/rplidar_protocol.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/win32/arch_win32.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/win32/net_serial.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/win32/net_serial.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/win32/timer.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/win32/timer.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/win32/winthread.hpp",
+    "Source/rk/third_party/slamtec_sdk/src/hal/abs_rxtx.h",
+    "Source/rk/third_party/slamtec_sdk/src/hal/event.h",
+    "Source/rk/third_party/slamtec_sdk/src/hal/locker.h",
+    "Source/rk/third_party/slamtec_sdk/src/hal/thread.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/hal/thread.h",
+    "Source/rk/third_party/slamtec_sdk/src/hal/util.h",
+    "Source/rk/third_party/slamtec_sdk/src/sdkcommon.h"
+  ],
+  "source_notices/notice_013.txt": [
+    "Source/rk/third_party/slamtec_sdk/include/rptypes.h",
+    "Source/rk/third_party/slamtec_sdk/include/sl_crc.h",
+    "Source/rk/third_party/slamtec_sdk/include/sl_lidar.h",
+    "Source/rk/third_party/slamtec_sdk/include/sl_lidar_cmd.h",
+    "Source/rk/third_party/slamtec_sdk/include/sl_lidar_protocol.h",
+    "Source/rk/third_party/slamtec_sdk/include/sl_types.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/linux/arch_linux.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/linux/net_serial.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/linux/net_serial.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/linux/thread.hpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/linux/timer.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/linux/timer.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/macOS/arch_macOS.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/macOS/net_serial.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/macOS/net_serial.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/macOS/thread.hpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/macOS/timer.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/macOS/timer.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/win32/arch_win32.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/win32/net_serial.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/win32/net_serial.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/win32/timer.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/win32/timer.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/win32/winthread.hpp"
+  ],
+  "source_notices/notice_014.txt": [
+    "Source/rk/third_party/slamtec_sdk/include/sl_crc.h"
+  ],
+  "source_notices/notice_015.txt": [
+    "Source/rk/third_party/slamtec_sdk/include/sl_lidar.h"
+  ],
+  "source_notices/notice_016.txt": [
+    "Source/rk/third_party/slamtec_sdk/include/sl_lidar_cmd.h"
+  ],
+  "source_notices/notice_017.txt": [
+    "Source/rk/third_party/slamtec_sdk/include/sl_lidar_driver.h",
+    "Source/rk/third_party/slamtec_sdk/include/sl_lidar_driver_impl.h"
+  ],
+  "source_notices/notice_018.txt": [
+    "Source/rk/third_party/slamtec_sdk/include/sl_lidar_driver.h",
+    "Source/rk/third_party/slamtec_sdk/include/sl_lidar_driver_impl.h",
+    "Source/rk/third_party/slamtec_sdk/src/rplidar_driver.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/sl_async_transceiver.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/sl_async_transceiver.h",
+    "Source/rk/third_party/slamtec_sdk/src/sl_crc.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/sl_lidar_driver.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/sl_lidarprotocol_codec.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/sl_lidarprotocol_codec.h",
+    "Source/rk/third_party/slamtec_sdk/src/sl_serial_channel.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/sl_tcp_channel.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/sl_udp_channel.cpp"
+  ],
+  "source_notices/notice_019.txt": [
+    "Source/rk/third_party/slamtec_sdk/include/sl_lidar_protocol.h"
+  ],
+  "source_notices/notice_020.txt": [
+    "Source/rk/third_party/slamtec_sdk/include/sl_types.h"
+  ],
+  "source_notices/notice_021.txt": [
+    "Source/rk/third_party/slamtec_sdk/src/arch/linux/arch_linux.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/linux/net_serial.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/linux/net_serial.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/linux/thread.hpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/linux/timer.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/linux/timer.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/macOS/arch_macOS.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/macOS/net_serial.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/macOS/net_serial.h",
+    "Source/rk/third_party/slamtec_sdk/src/arch/macOS/thread.hpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/macOS/timer.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/arch/macOS/timer.h"
+  ],
+  "source_notices/notice_022.txt": [
+    "Source/rk/third_party/slamtec_sdk/src/arch/linux/net_socket.cpp"
+  ],
+  "source_notices/notice_023.txt": [
+    "Source/rk/third_party/slamtec_sdk/src/arch/macOS/net_socket.cpp"
+  ],
+  "source_notices/notice_024.txt": [
+    "Source/rk/third_party/slamtec_sdk/src/arch/win32/net_socket.cpp"
+  ],
+  "source_notices/notice_025.txt": [
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/dataunnpacker_commondef.h",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/dataunnpacker_internal.h",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/dataunpacker.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/dataunpacker.h",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/unpacker/handler_capsules.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/unpacker/handler_capsules.h",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/unpacker/handler_hqnode.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/unpacker/handler_hqnode.h",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/unpacker/handler_normalnode.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/unpacker/handler_normalnode.h",
+    "Source/rk/third_party/slamtec_sdk/src/sl_async_transceiver.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/sl_async_transceiver.h",
+    "Source/rk/third_party/slamtec_sdk/src/sl_lidarprotocol_codec.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/sl_lidarprotocol_codec.h"
+  ],
+  "source_notices/notice_026.txt": [
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/dataunnpacker_commondef.h",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/dataunnpacker_internal.h",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/dataunpacker.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/dataunpacker.h",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/unpacker/handler_capsules.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/unpacker/handler_capsules.h",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/unpacker/handler_hqnode.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/unpacker/handler_hqnode.h",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/unpacker/handler_normalnode.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/dataunpacker/unpacker/handler_normalnode.h"
+  ],
+  "source_notices/notice_027.txt": [
+    "Source/rk/third_party/slamtec_sdk/src/hal/byteops.h"
+  ],
+  "source_notices/notice_028.txt": [
+    "Source/rk/third_party/slamtec_sdk/src/hal/byteorder.h"
+  ],
+  "source_notices/notice_029.txt": [
+    "Source/rk/third_party/slamtec_sdk/src/hal/socket.h"
+  ],
+  "source_notices/notice_030.txt": [
+    "Source/rk/third_party/slamtec_sdk/src/hal/waiter.h"
+  ],
+  "source_notices/notice_031.txt": [
+    "Source/rk/third_party/slamtec_sdk/src/rplidar_driver.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/sl_crc.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/sl_lidar_driver.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/sl_serial_channel.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/sl_tcp_channel.cpp",
+    "Source/rk/third_party/slamtec_sdk/src/sl_udp_channel.cpp"
+  ],
+  "source_notices/notice_032.txt": [
+    "Source/rk/third_party/wayland/wayland-client-core.h",
+    "Source/rk/third_party/wayland/wayland-client.h",
+    "Source/rk/third_party/wayland/wayland-util.h"
+  ],
+  "source_notices/notice_033.txt": [
+    "Source/rk/third_party/wayland/wayland-egl-core.h",
+    "Source/rk/third_party/wayland/wayland-egl.h"
+  ]
+}

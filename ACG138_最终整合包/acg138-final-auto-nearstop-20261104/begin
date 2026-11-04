@@ -1,0 +1,13 @@
+#!/bin/sh
+# 统一启动入口，原手机启动入口保留为begin-phone。
+set -eu
+root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+: "${ROBOT_RUN_DIR:=/run/acg138-final-auto-nearstop-app}"
+: "${PHONE_RUN_DIR:=/run/acg138-final-auto-nearstop-phone}"
+export ROBOT_RUN_DIR PHONE_RUN_DIR
+case ${1:-start} in
+ start|status|stop) exec sh "$root/robotctl" "${1:-start}";;
+ drive) export ROBOT_NAV_MODE=drive ACG_LIDAR_CRUISE=0;exec sh "$root/robotctl" start;;
+ cruise) export ROBOT_NAV_MODE=cruise ACG_LIDAR_CRUISE=1;exec sh "$root/robotctl" start;;
+ *) echo '用法：sh begin [start|drive|cruise|status|stop]' >&2;exit 2;;
+esac

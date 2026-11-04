@@ -1,0 +1,19 @@
+Rockchip MPP headers and runtime library
+
+Source: ACG138-Offline-BSP-20260923-r4 matching SDK, supplied locally.
+Headers and binary: sdk/yy3588_extras/external/rknpu2/examples/3rdparty/mpp
+Binary: Linux/aarch64/librockchip_mpp.so.0
+SHA256: 44b4d0df401c57c9b2a48e1f4703348e786c2585adef0131e77e7863356d5ce8
+Upstream: https://github.com/rockchip-linux/mpp
+License texts supplied with the SDK: mpp/LICENSES/Apache-2.0 and mpp/LICENSES/MIT.
+Copyright and license notices accompany the headers in LICENSES. Source
+files identify their corresponding notice records.
+
+The runtime loads the exact packaged library by an absolute application-private
+path. It does not overwrite a system MPP library or alter the existing DSI/NPU
+dynamic library search path. Headers permit rebuilding this integration; building
+MPP itself requires the corresponding SDK/upstream sources, not bundled here.
+
+Host integration tests use tests/mock_mpp.c and a generated FFmpeg baseline AVC
+fixture. The mock is never installed, selected by begin, or published as a board
+runtime .so. Passing those tests is not evidence of a physical encoder test.

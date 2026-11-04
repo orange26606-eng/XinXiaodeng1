@@ -1,0 +1,7 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'cn.acg138.rover'
+    compileSdk 35
+    defaultConfig { applicationId 'cn.acg138.rover.odom'; minSdk 26; targetSdk 35; versionCode 67; versionName '1.37.1-color-size' }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8 }
+}

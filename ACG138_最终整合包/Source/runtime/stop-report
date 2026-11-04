@@ -1,0 +1,12 @@
+#!/bin/sh
+# 查看最新导航会话的事件原因，包含硬件看门狗变化，
+# 只读检查，不启动或停止车辆。
+set -eu
+session=$(ls -td /tmp/acg138-unified-s1.* 2>/dev/null | head -n 1 || true)
+if [ -z "$session" ] || [ ! -f "$session/navigation.log" ]; then
+  echo 'No navigation.log found under /tmp/acg138-unified-s1.*' >&2
+  exit 1
+fi
+log="$session/navigation.log"
+printf 'Navigation log: %s\n' "$log"
+grep -E 'STOP_EVENT|MOTION_ZERO_EVENT|FPGA_STATE_EVENT|FPGA_FEEDBACK_FAILURE|CHASSIS_FEEDBACK_FAILURE|CHASSIS_PROTECTION_FAILURE|CHASSIS_APPLY_FAILURE|PHONE_CANCEL_DIAG|PHONE_START_DIAG|PROTECTED_COMMAND_DIAG|CONTROL_NAV_OVERRUN|CONTROL_COST|CONTROL_TICK_REBASE|NAV_STAGE_COST|NAV_PENDING_WAIT|DRIVE_TIMING|MAP_EXPORT_COST|MAP_COPY_COST|LIVE_NAV_FATAL' "$log" | tail -n 80 || true

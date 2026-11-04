@@ -1,0 +1,15 @@
+{
+  "kind": "measured_mono_intrinsics",
+  "source_name": "mono_eye0_20261031.npz",
+  "source_sha256": "512a3427f4c26e05342086d5dfe2031fba3ebba74ac939476c4b8bff55cbe841",
+  "runtime_sha256": "2e97f0c4db2fb3a9538531bed96d4e670e3127defaf0205be67129a10a67d89d",
+  "rms_px": 1.5212817240274064,
+  "eye": 0,
+  "image_size": [
+    960,
+    1080
+  ],
+  "physical_side_verified": true,
+  "camera_to_body_verified": false,
+  "hardware_accuracy_verified": false
+}

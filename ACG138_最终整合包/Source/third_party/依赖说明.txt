@@ -1,0 +1,5 @@
+离线语音构建依赖
+
+sherpa/classes.jar与kotlin-stdlib-2.0.21.jar来自配套工程的构建依赖。
+android/app/src/main/assets/sherpa-zh与jniLibs中的模型及本地库取自随包APK，文件内容逐项记录在DEPENDENCIES.json。
+Android SDK、ECJ、D8及JDK独立安装。编译使用android_tools/build_apk.py，签名密钥由使用方自行配置。

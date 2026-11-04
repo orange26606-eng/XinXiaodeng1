@@ -1,0 +1,7 @@
+/*
+ *  Slamtec LIDAR SDK
+ *
+ *  Copyright (c) 2014 - 2023 Shanghai Slamtec Co., Ltd.
+ *  http://www.slamtec.com
+ *
+ */

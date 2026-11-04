@@ -1,0 +1,18 @@
+最终位流布局布线报告
+
+报告对应phone_robot_final_auto_nearstop.fs，与R4/APK67整合包中的FS哈希一致。
+SHA256 78a55ea388a3af2670ccc690cabedfdb10f6e4cd384056044586f10f20fd8c4d
+
+查看方式
+phone_robot_final_auto_nearstop.rpt.html：布局布线、资源和引脚报告。
+phone_robot_final_auto_nearstop.rpt.txt：同一报告的纯文本。
+phone_robot_final_auto_nearstop.tr.html：时序报告入口，需与两个_tr_子文件放在同一目录。
+phone_robot_final_auto_nearstop_syn.rpt.html：综合报告。
+phone_robot_final_auto_nearstop.pin.html：引脚表。
+phone_robot_final_auto_nearstop.timing_paths：时序路径数据。
+
+内部Setup违例0，Hold违例0，报告最小余量0.031ns。
+报告资源表使用工具的整数百分比显示。精确占比可按已用数量除以总量计算。
+外部IO输入输出延迟预算尚未单独签核。
+
+报告取自实际构建输出，结果与路径内容未重新计算。为去除私人构建目录，主机绝对路径前缀统一替换为FPGA_Project，其余报告内容保持不变。构建原件保留在原目录。

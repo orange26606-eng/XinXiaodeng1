@@ -1,0 +1,13 @@
+// 由policy/r6-motion.json生成，请从配置源更新。
+`ifndef ACG_R6_MOTION_POLICY_VH
+`define ACG_R6_MOTION_POLICY_VH
+`define R6_CONFIG_ID 32'h31110301
+`define R6_COMMAND_TTL_MS 500
+`define R6_FRONT_OBSERVE_MM 100
+`define R6_FRONT_NEAR_MM 50
+`define R6_FRONT_FORWARD_STOP_MM 30
+`define R6_FRONT_EMERGENCY_MM 20
+`define R6_FRONT_RELEASE_MM 40
+`define R6_FRONT_RELEASE_SAMPLES 2
+`define R6_SIDE_TURN_MM 30
+`endif

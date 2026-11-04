@@ -1,0 +1,64 @@
+#!/bin/sh
+set -eu
+root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+# 脚本安装于运行目录的map子目录，上一级保留手机运行程序。
+parent=$(CDPATH= cd -- "$root/.." && pwd)
+active=0
+if [ "${1:-}" = --run ]; then active=1; shift; fi
+# 端口、数据源和配置与USB采集程序及上级运行目录配套。
+option=1
+for arg in "$@"; do
+ if [ "$option" = 1 ]; then
+  case "$arg" in --timing-profile|--output|--duration-s|--mount-x-m|--mount-y-m|--mount-yaw-deg|--preview) ;;
+   *) echo "Unsupported wrapper option: $arg; source/ports/config/mode are managed here." >&2; exit 2;;
+  esac
+  option=0
+ else option=1
+ fi
+done
+[ "$option" = 1 ] || { echo 'Missing option value.' >&2; exit 2; }
+app=$root/lab-real-panel
+if [ "${SNAPSHOT_MAP_HEADLESS:-0}" = 1 ]; then app=$root/lab-real; fi
+: "${ACG_PHONE_DIR:=/run/acg138-final-auto-nearstop-sensors}"
+: "${LIDAR_DEVICE:=/dev/ttyUSB0}"
+: "${XDG_RUNTIME_DIR:=/run}"
+: "${WAYLAND_DISPLAY:=wayland-0}"
+export XDG_RUNTIME_DIR WAYLAND_DISPLAY
+snapshot=$ACG_PHONE_DIR/mpu9250.snapshot
+if [ "$active" = 0 ]; then
+ exec "$app" --preflight --mpu-snapshot "$snapshot" --mode mapping --ls01-port 6212 --mpu-odometry "$parent/odometry.conf" --mpu-imu "$parent/mpu9250.conf" "$@"
+fi
+# 先核对完整选项及所选时序假设，
+# 再打开USB或创建后台子进程。
+"$app" --preflight --mpu-snapshot "$snapshot" --mode mapping --ls01-port 6212 --mpu-odometry "$parent/odometry.conf" --mpu-imu "$parent/mpu9250.conf" "$@"
+[ -r "$snapshot" ] || { echo "Start independent service first: missing $snapshot" >&2; exit 2; }
+logs=$(mktemp -d /tmp/acg138-snapshot-map.XXXXXX)
+app_pid= lidar_pid=
+cleanup() {
+ trap - EXIT HUP INT TERM
+ if [ -n "$lidar_pid" ]; then kill "$lidar_pid" 2>/dev/null || :; wait "$lidar_pid" 2>/dev/null || :; fi
+ if [ -n "$app_pid" ]; then kill "$app_pid" 2>/dev/null || :; wait "$app_pid" 2>/dev/null || :; fi
+ echo "Map/USB children stopped. Phone and sensor service were NOT stopped. Logs/map: $logs"
+}
+trap cleanup EXIT
+trap 'exit 130' HUP INT TERM
+echo 'FILE-ONLY sensor input; UDP5016 not opened. Vehicle control unchanged.'
+echo 'Explicit timing profile is experimental until measured on this board.'
+echo "Logs: $logs"
+"$app" --run --mpu-snapshot "$snapshot" --mode mapping --ls01-port 6212 --mpu-odometry "$parent/odometry.conf" --mpu-imu "$parent/mpu9250.conf" --save-map "$logs/map.rmap" "$@" > "$logs/mapping.log" 2>&1 &
+app_pid=$!
+sleep 1
+if ! kill -0 "$app_pid" 2>/dev/null; then cat "$logs/mapping.log"; exit 1; fi
+"$root/lidar-usb-timed" --device "$LIDAR_DEVICE" --host 127.0.0.1 --port 6212 > "$logs/lidar.log" 2>&1 &
+lidar_pid=$!
+while kill -0 "$app_pid" 2>/dev/null; do
+ if ! kill -0 "$lidar_pid" 2>/dev/null; then cat "$logs/lidar.log"; exit 1; fi
+ sleep 1
+done
+set +e
+wait "$app_pid"
+result=$?
+set -e
+app_pid=
+cat "$logs/mapping.log"
+exit "$result"

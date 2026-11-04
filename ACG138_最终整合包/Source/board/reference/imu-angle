@@ -1,0 +1,19 @@
+#!/bin/sh
+# 先在板端终端完成校准确认，再打开姿态窗口。
+# 网络、合成器、相机服务和启动配置保持不变。
+set -eu
+imu_script_dir=$(CDPATH= cd -P "$(dirname "$0")" && pwd)
+imu_panel=${IMU_PANEL_BINARY:-"$imu_script_dir/imu-wayland-panel"}
+if [ -z "${IMU_PANEL_BINARY:-}" ] && [ ! -x "$imu_panel" ]; then
+    imu_panel="$imu_script_dir/output/imu-wayland-panel"
+fi
+if [ ! -x "$imu_panel" ]; then
+    echo "IMU panel executable not found: $imu_panel" >&2
+    echo "Build with the matching Buildroot SDK, then place imu-angle beside imu-wayland-panel." >&2
+    exit 1
+fi
+# 默认值与配套相机程序一致，显式会话参数优先。
+: "${XDG_RUNTIME_DIR:=/run}"
+: "${WAYLAND_DISPLAY:=wayland-0}"
+export XDG_RUNTIME_DIR WAYLAND_DISPLAY
+exec "$imu_panel" "$@"

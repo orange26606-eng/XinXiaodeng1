@@ -1,0 +1,5 @@
+第三方许可
+
+source_notice_index.json列出源码文件与许可记录的对应关系。
+source_notices保存归档条款，源码中的许可指针按整合包根目录解析。
+stb图像写出组件采用stb-Unlicense.txt中的许可选项。

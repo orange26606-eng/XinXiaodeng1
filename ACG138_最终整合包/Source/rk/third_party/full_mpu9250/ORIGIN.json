@@ -1,0 +1,16 @@
+{
+  "source": "acg138_full_mpu9250_20261027",
+  "date": "2026-10-27",
+  "files": {
+    "board/odometry.c": "cc213cd79932ed552f7cf813315e3b253a9a77eca2b4550438b346f458de2a4a",
+    "board/odometry.h": "0e523a8eaf8c24a4d6d775c3ba21b84abd023231c69f997dac209969c3df1617",
+    "board/mpu9250/imu_fusion.c": "63939d2ed81e6ece388c6129d88b0517393c943c226af87c1bf6e2c445706c8a",
+    "board/mpu9250/imu_fusion.h": "b511809b8e0aca1c270b7c85d3a68ed9380e8439febcdb7da96f4e4f1d7958ee",
+    "board/mpu9250/mpu_adapter.c": "6da6bb1fae9d280ac0ad022d5b81fe3582cbf406158dd563828402d5af21f38b",
+    "board/mpu9250/mpu_adapter.h": "8a67b4143af0c0f7cb718500ab0e02bfac9928a30be1ff748d4f573d709b4ec1",
+    "board/reference/imu_protocol.h": "809352c0da8340d056115dd7b0cb0f0c757e58bc0527286853f8b3d0dafa491a",
+    "THIRD_PARTY_NOTICE.txt": "24440aa951b020c8d90dabff6a985b4f163c44b0537155546b4dcac278d58668"
+  },
+  "modified": false,
+  "purpose": "Readonly raw I9E1 v2 + exact existing MPU fusion/odometry; no motor sources"
+}

@@ -1,0 +1,7 @@
+交付目录
+
+FPGA目录提供已完成布局布线的位流。完整硬件工程位于Source/fpga，包含Verilog、引脚约束、时钟约束和存储器初始化数据。
+acg138-final-auto-nearstop-20261104为板端协同运行目录，启动命令为sh begin drive，须随其模型、标定、配置及运行库一起传输。
+Source其他目录提供应用源码与测试；Source/runtime为脚本和配置模板，不包含完整运行程序。
+Android目录包含APK67。Docs/项目说明.txt介绍FPGA功能及模块入口，Docs/使用说明.txt介绍操作步骤。
+根目录和运行目录分别使用SHA256SUMS.txt核对文件。LICENSES保存第三方许可，源码中的许可指针按整合包根目录解析。

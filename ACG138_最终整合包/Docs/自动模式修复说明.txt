@@ -1,0 +1,23 @@
+自动模式入口
+版本1.37.1，APK67
+
+RK签发的准备令牌有效期为8秒。旧手机端只接受2.5秒以内的回执，因此会拒绝合法令牌，无法提交正式启动请求。
+
+APK67将令牌校验统一为8秒。手机操作预算仍为2500毫秒，单次HTTP上限为600毫秒。令牌有效期与手机网络请求时限分别计算。
+自动启动前等待原语音任务取消完成，再依次执行停车屏障、获取令牌和提交启动。取消等待上限2200毫秒，超时后提示重试。
+
+安装Android/ACG138-Rover-v1.37.1-auto-fix.apk。RK运行目录和启动命令不变，仍为sh begin drive。
+已安装相同哈希的APK67时可继续使用，无需重复安装。位流也保持原哈希。
+
+验证记录
+35项自动启动事务检查和4项取消屏障检查通过，覆盖令牌有效期、无效令牌、取消、超时和回执关联。
+完整Java源码编译、D8转换和签名校验通过。22个界面、语音模型与原生库资源和APK66相同。
+APK67已完成两次现场自动模式入口验证，RK记录包含PREPARE、CONSUME QUEUED、AUTO_CONTROLLER及AUTONOMOUS状态。
+这些记录验证了启动链路。整车避障性能、长时间运行和外部IO时序尚未重新测试。
+
+日志判断
+PREPARE TOKEN_ISSUED表示准备令牌已签发。
+CONSUME QUEUED表示正式请求已通过服务端校验并入队。
+AUTO_CONTROLLER backend=FPGA_SONAR_NEARSTOP表示自动任务已交给FPGA超声波控制入口。
+CONTROL_LEASE mode=AUTONOMOUS表示服务端进入自动控制状态。
+FPGA_AUTO_START_NOT_ACKNOWLEDGED表示未收到FPGA确认，需检查位流与板内通信。

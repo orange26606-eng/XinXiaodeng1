@@ -1,0 +1,14 @@
+{
+  "upstream": "https://github.com/FoundationVision/ByteTrack",
+  "ref": "d1bf0191adff59bc8fcfeaa0b33d3d1642552a99",
+  "retrieved": "2026-11-02",
+  "license": "MIT",
+  "files": {
+    "LICENSE": "e9d83751678cbaba6dfba902ea39215c423d93425e58f8450d6001f7261696f9",
+    "deploy/ncnn/cpp/src/BYTETracker.cpp": "0047c805608d9b7aa098c3e616363e7cd45f20f04fe251ef558a72ad8d58b3dc",
+    "deploy/ncnn/cpp/src/lapjv.cpp": "8714e7e1204d4daeb1349f3310ef73cf5dcd848e387664700d3370d0bd301157",
+    "deploy/ncnn/cpp/include/lapjv.h": "f89cff1b5d1858217956fd022bf807c309b82443622f13a6e8c7fcf584cc5790",
+    "deploy/ncnn/cpp/src/utils.cpp": "25907e02630e63d785f82a594700581f47c2c730c52e1355803a246728df8af2"
+  },
+  "port": "Flow v3 bounded high/low/tentative LAPJV stages with available-cue-normalized composite final costs (motion/navigation35,lidar25,appearance25,class/shape10,IoU5); no hard IoU floor or deep ReID. Official solver remains byte-exact."
+}

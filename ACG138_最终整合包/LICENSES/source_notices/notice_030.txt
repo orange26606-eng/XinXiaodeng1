@@ -1,0 +1,5 @@
+/*
+ * For synchronize asynchrous operations
+ *
+ * Copyright 2010 Robopeak Team
+ */

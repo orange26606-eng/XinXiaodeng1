@@ -1,0 +1,171 @@
+#!/bin/sh
+# 统一管理一个相机与YOLO生产者，以及一个相机与IMU显示窗口。
+# 日期2026-10-19，版本1.4.0。
+# 1.1.0统一会话管理；1.1.1支持相机批次循环，IMU仅启动一次。
+# 1.1.2移除强制预览尺寸参数，使用已验证的原生相机显示。
+# 1.2.0使用固定布局面板、原子采集节点就绪标记和可选全屏输出。
+# 1.2.1默认HDMI-A-2全屏，每次重启采集批次前等待缓冲释放。
+# 1.2.2使用video62作为已交换双眼顺序的无YOLO采集节点。
+# MPU9250接收服务执行静置校准，不使用旧模块的ACK握手。
+# 1.3.0，2026-10-16：会话统一管理YOLO快照和参考航向。
+# 1.4.0，2026-10-19：默认使用DSI0/FPC3输出DSI-1，允许参数覆盖。
+set -eu
+BASE=$(CDPATH= cd -P -- "$(dirname -- "$0")" && pwd)
+case "${1:-}" in
+ -h|--help)
+  echo "Usage: $0 [frames:1..100000]"
+  echo 'Defaults: 100000 frames, one fullscreen panel, auto HDMI first then DSI; camera left and IMU right.'
+  echo 'ISP_YOLO=0 disables detection. CAMERA_IMU_LOOP=1 repeats clean camera batches only.'
+  echo 'CAMERA_IMU_OUTPUT=auto follows actual Wayland outputs and HDMI hotplug; a specific output name or windowed overrides.'
+  echo 'Keep vehicle still for about 2 seconds of valid 9250 data; RK performs gyro bias calibration.'
+  exit 0 ;;
+esac
+[ "$#" -le 1 ] || { echo 'Too many arguments; use --help.' >&2; exit 2; }
+FRAMES=${1:-100000}
+OUTPUT=${CAMERA_IMU_OUTPUT:-auto}
+LOOP=${CAMERA_IMU_LOOP:-0}
+export ISP_FAKE_FRAME_US=${ISP_FAKE_FRAME_US:-5000}
+export YOLO_FAST_OUTPUT=${YOLO_FAST_OUTPUT:-1}
+case "$LOOP" in 0|1) ;; *) echo 'CAMERA_IMU_LOOP must be 0 or 1.' >&2; exit 2;; esac
+[ -t 0 ] || { echo 'Run in the interactive RK3588 terminal (PuTTY or SSH).' >&2; exit 2; }
+[ "$(id -u)" = 0 ] || { echo 'Run as root.' >&2; exit 2; }
+for program in "$BASE/camera-producer" "$BASE/camera-imu-panel"; do
+ [ -x "$program" ] || { echo "Missing executable: $program" >&2; exit 2; }
+done
+: "${XDG_RUNTIME_DIR:=/run}"
+: "${WAYLAND_DISPLAY:=wayland-0}"
+export XDG_RUNTIME_DIR WAYLAND_DISPLAY
+case "$WAYLAND_DISPLAY" in /*) WAYLAND_SOCKET=$WAYLAND_DISPLAY;; *) WAYLAND_SOCKET="$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY";; esac
+[ -S "$WAYLAND_SOCKET" ] || { echo "Wayland socket not found: $WAYLAND_SOCKET" >&2; exit 2; }
+LOCK=/tmp/camera-imu.lock
+mkdir "$LOCK" 2>/dev/null || {
+ echo "Another combined session owns $LOCK. Stop that session first; do not delete its lock while it runs." >&2
+ exit 2
+}
+camera=; imu=; RUN=; cycle=0; camera_log=; video_node=
+cleanup() {
+ trap - EXIT
+ trap '' INT TERM HUP
+ # 只管理本次调用创建的直接子进程，不按名称批量结束。
+ for child in "$imu" "$camera"; do
+  if [ -n "$child" ]; then kill -TERM "$child" 2>/dev/null || :; fi
+ done
+ for child in "$imu" "$camera"; do
+  if [ -n "$child" ]; then wait "$child" 2>/dev/null || :; fi
+ done
+ rm -f "$LOCK/pid"
+ rmdir "$LOCK" 2>/dev/null || :
+ [ -z "$RUN" ] || echo "Session logs retained: $RUN"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
+echo $$ >"$LOCK/pid"
+RUN=$(mktemp -d /tmp/camera-imu-session.XXXXXX)
+unset YOLO_FPS_FILE
+if [ "${ISP_YOLO:-1}" = 1 ]; then
+ YOLO_FPS_FILE="$RUN/yolo-fps.latest"
+ export YOLO_FPS_FILE
+fi
+echo "Session logs: $RUN"
+start_camera() {
+rm -f "$RUN/yolo-fps.latest"
+cycle=$((cycle + 1))
+camera_log="$RUN/camera-$cycle-launcher.log"
+mkdir "$RUN/camera-$cycle"
+rm -f "$RUN/camera.ready" "$RUN/camera.released"
+echo "Starting dual-camera batch $cycle (ISP_YOLO=${ISP_YOLO:-1})."
+CAMERA_IMU_READY_FILE="$RUN/camera.ready" CAMERA_IMU_LOG_DIR="$RUN/camera-$cycle" \
+ CAMERA_IMU_DETECTIONS_FILE="$RUN/detections.latest" \
+ "$BASE/camera-producer" "${1:-100000}" \
+ </dev/null >"$camera_log" 2>&1 &
+camera=$!
+attempt=0
+while [ ! -f "$RUN/camera.ready" ]; do
+ if ! kill -0 "$camera" 2>/dev/null; then
+  rc=0; wait "$camera" || rc=$?; camera=
+  cat "$camera_log" >&2
+  echo "Camera batch startup ended (status=$rc); stopping this session." >&2
+  [ "$rc" -ne 0 ] || rc=8
+  exit "$rc"
+ fi
+ attempt=$((attempt + 1))
+ if [ "$attempt" -gt 60 ]; then
+  tail -n 30 "$camera_log" >&2
+  echo 'Camera startup timed out; stopping this session.' >&2
+  exit 8
+ fi
+ if [ -n "$imu" ] && ! kill -0 "$imu" 2>/dev/null; then
+  rc=0; wait "$imu" || rc=$?; imu=
+  echo "IMU exited during camera startup (status=$rc); stopping this session."
+  exit "$rc"
+ fi
+ sleep 1
+done
+kill -0 "$camera" 2>/dev/null || { echo 'Camera exited at readiness boundary.' >&2; exit 8; }
+IFS= read -r selected_node <"$RUN/camera.ready" || { echo 'Invalid camera readiness record.' >&2; exit 8; }
+case "$selected_node" in /dev/video60|/dev/video61|/dev/video62) ;; *) echo "Unexpected capture node: $selected_node" >&2; exit 8;; esac
+if [ -n "$video_node" ] && [ "$video_node" != "$selected_node" ]; then
+ echo 'Capture node changed between batches; stopping this session.' >&2
+ exit 8
+fi
+video_node=$selected_node
+}
+wait_video_release() {
+attempt=0
+while [ ! -f "$RUN/camera.released" ]; do
+ if ! kill -0 "$imu" 2>/dev/null; then
+  rc=0; wait "$imu" || rc=$?; imu=
+  echo "Panel ended while releasing capture (status=$rc); stopping this session."
+  exit "$rc"
+ fi
+ attempt=$((attempt + 1))
+ if [ "$attempt" -gt 5 ]; then
+  echo 'Panel did not release capture before the next camera batch; stopping this session.' >&2
+  exit 8
+ fi
+ sleep 1
+done
+}
+start_camera "$FRAMES"
+echo 'Camera producer ready. Keep the vehicle still during RK MPU9250 gyro bias calibration.'
+echo 'One camera/IMU window opens; missing IMU affects pose only. Ctrl+C stops this session.'
+# 保留终端供面板检查TTY并管理会话。
+# 关闭作业控制，使子进程留在终端前台进程组。
+set -- --interface "${PHONE_FPGA_IFACE:-eth0}" --video "$video_node" \
+ --video-ready-file "$RUN/camera.ready" --video-released-file "$RUN/camera.released"
+if [ "${ISP_YOLO:-1}" = 1 ]; then
+ set -- "$@" --detections "$RUN/detections.latest"
+fi
+if [ "$OUTPUT" = windowed ]; then
+ set -- "$@" --windowed
+else
+ set -- "$@" --fullscreen "$OUTPUT"
+fi
+exec 3<&0
+"$BASE/camera-imu-panel" "$@" <&3 &
+imu=$!
+exec 3<&-
+while :; do
+ if ! kill -0 "$imu" 2>/dev/null; then
+  rc=0; wait "$imu" || rc=$?; imu=
+  echo "Camera/IMU window/session ended (status=$rc); stopping this camera session."
+  exit "$rc"
+ fi
+ if ! kill -0 "$camera" 2>/dev/null; then
+  rc=0; wait "$camera" || rc=$?; camera=
+  tail -n 30 "$camera_log" >&2
+  if [ "$rc" = 0 ] && [ "$LOOP" = 1 ]; then
+   echo 'Camera batch completed; restarting producer only. The panel and IMU calibration session remain active.'
+   # 旧消费者仍持有采集缓冲时，v4l2loopback会拒绝S_FMT。
+   # 生产者清理时撤销就绪标记，面板确认采集已关闭。
+   wait_video_release
+   start_camera "$FRAMES"
+   continue
+  fi
+  echo "Camera session ended (status=$rc); stopping the camera/IMU window."
+  exit "$rc"
+ fi
+ sleep 1
+done

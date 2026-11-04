@@ -1,0 +1,45 @@
+#!/bin/sh
+# 以当前安装目录为基准运行，避免继承旧启动器路径。
+set -eu
+APP=$(CDPATH= cd -P -- "$(dirname -- "$0")" && pwd)
+export PHONE_APP_DIR="$APP"
+export ODOM_CONFIG=${ODOM_CONFIG:-"$APP/odometry.conf"}
+export MPU9250_CONFIG=${MPU9250_CONFIG:-"$APP/mpu9250.conf"}
+export PHONE_LOG_DIR="$APP/onekey-logs"
+export ACG_PHONE_DIR=${ACG_PHONE_DIR:-/run/acg138-final-auto-nearstop-sensors}
+export PHONE_RUN_DIR=${PHONE_RUN_DIR:-/run/acg138-final-auto-nearstop-phone}
+export PHONE_V7_DIR="$APP/camera"
+export ISP_FAKE_FRAME_US=5000
+if [ "${1:-}" = --no-detect ]; then export ISP_YOLO=0; shift; fi
+if [ -z "${PHONE_FPGA_IFACE:-}" ]; then
+    SYS=${PHONE_SYS_DIR:-/sys}
+    for netdev in "$SYS"/class/net/*; do
+        device=$(readlink -f "$netdev/device" 2>/dev/null || :)
+        case "$device" in *fe1c0000.ethernet*) PHONE_FPGA_IFACE=${netdev##*/}; break;; esac
+    done
+    export PHONE_FPGA_IFACE=${PHONE_FPGA_IFACE:-eth0}
+fi
+case ${1:-start} in
+ start) sh "$APP/resource-conflict.sh";sh "$APP/setup-fpga-link.sh" "$PHONE_FPGA_IFACE";;
+esac
+# 仅设置随包相机文件的权限，Windows SCP传输可能丢失执行位。
+for name in run-camera-imu run-camera-imu-fast run-yolo-fast camera-producer \
+            camera-imu-panel camera-half-swap yolo-results-bridge yolo11-pipeline \
+            perf/isp-probe-opt; do
+    [ ! -f "$APP/camera/$name" ] || chmod u+x "$APP/camera/$name"
+done
+
+# 首次执行sh begin时恢复执行权限，之后可使用./begin。
+# 只处理下列运行文件，原v7文件保持不变。
+for name in begin robot-pty startPhoneV7 start-phone-display.sh start-phone-server.sh \
+            check-board.sh acg138-phone-server camera-imu-panel-phone acg138-odometry-info; do
+    if [ -f "$APP/$name" ] && [ ! -x "$APP/$name" ]; then
+        chmod u+x "$APP/$name"
+    fi
+done
+if [ ! -x "$APP/startPhoneV7" ]; then
+    printf 'Missing launcher: %s/startPhoneV7\n' "$APP" >&2
+    exit 2
+fi
+printf 'NAV program directory: %s\n' "$APP"
+exec "$APP/startPhoneV7" "$@"

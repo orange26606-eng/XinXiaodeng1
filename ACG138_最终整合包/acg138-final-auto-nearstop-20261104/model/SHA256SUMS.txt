@@ -1,0 +1,1 @@
+efd72ac9ecd8be39a240375e5a479e61a1293d0c9eacf3f954b5eb9a0577f403  yolo11s-int8-rk3588.rknn

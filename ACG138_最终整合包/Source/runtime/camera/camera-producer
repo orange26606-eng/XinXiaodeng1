@@ -1,0 +1,192 @@
+#!/bin/sh
+# 相机采集启动器，沿用已验证的RK3588_YOLO_LIVE_V1流水线。
+# 日期2026-10-16，版本1.2.2。
+# 1.1.0独立窗口启动；1.1.1保留ISP_YOLO=0，默认显示尺寸800×450。
+# 1.1.2缩放预览出现黑屏后，恢复已验证的原生显示流水线。
+# 1.2.0保留ISP和YOLO生产者，为统一相机与IMU面板发布采集节点。
+# 1.2.1停止生产者前撤销就绪标记，待采集端关闭后再重启。
+# 1.2.2在YOLO处理前交换video62的NV12两半图像，并等待首个交换帧。
+# RAW1920×1080经ISP/video60、双眼交换/video62、YOLO/video61后进入显示面板。
+# 1.3.0，2026-10-16：图像交换与有界最新日志结果桥接合并。
+set -eu
+# 手机启动器通过临时符号链接目录调用此文件。
+# 模型和辅助程序使用实际安装的相机目录。
+SCRIPT_PATH=$(readlink -f "$0")
+APP_DIR=$(CDPATH= cd -P -- "$(dirname -- "$SCRIPT_PATH")" && pwd)
+SWAPPER="$APP_DIR/camera-half-swap"
+BRIDGE="$APP_DIR/yolo-results-bridge"
+BASE=/opt/fpga-camera-isp-1080
+PERF_BASE="$APP_DIR/perf"
+ISP_PROBE="$PERF_BASE/isp-probe-opt"
+YOLO="$APP_DIR/run-yolo-fast"
+MODEL=${MODEL_PATH:-"$APP_DIR/../model/yolo11s-int8-rk3588.rknn"}
+FRAMES=${1:-100000}
+USE_YOLO=${ISP_YOLO:-1}
+case "$USE_YOLO" in 0|1) ;; *) echo 'ISP_YOLO must be 0 or 1.' >&2; exit 2;; esac
+case "${1:-}" in
+ -h|--help)
+  echo "Usage: $0 [frames:1..100000]"
+  echo 'Dual1080 capture producer; ISP_YOLO=0 disables detection. No display window is created here.'
+  exit 0 ;;
+esac
+[ "$#" -le 1 ] || { echo 'Too many arguments; use --help.' >&2; exit 2; }
+for value in "$FRAMES"; do
+ case "$value" in ''|*[!0-9]*) echo 'Frames must be an integer.' >&2; exit 2;; esac
+ [ "${#value}" -le 6 ] || { echo 'Argument is too large.' >&2; exit 2; }
+done
+[ "$FRAMES" -ge 1 ] && [ "$FRAMES" -le 100000 ] || exit 2
+[ "$(id -u)" = 0 ] || { echo 'Run as root.' >&2; exit 2; }
+WIDTH=1920; HEIGHT=1080; MTU=4000; ARG=--dual-camera-1080
+IQ=${ISP_IQ_FILE:-ov5647_ACG138-OV5647-CSI0_default.json}
+for file in "$ISP_PROBE" "$PERF_BASE/fakecam/lib/librkaiq.so" "$BASE/lib/librkaiq.so" "/etc/iqfiles/$IQ"; do
+ [ -f "$file" ] || { echo "Missing $file" >&2; exit 2; }
+done
+[ -x "$ISP_PROBE" ] || { echo 'Missing executable ISP application.' >&2; exit 2; }
+[ -x "$SWAPPER" ] || { echo "Missing executable: $SWAPPER" >&2; exit 2; }
+if [ "$USE_YOLO" = 1 ]; then
+ echo "YOLO model: $MODEL"
+ if [ -z "${MODEL_PATH:-}" ]; then (cd "$APP_DIR/../model" && sha256sum -c SHA256SUMS.txt); fi
+ [ -x "$YOLO" ] && [ -f "$MODEL" ] || { echo 'Missing YOLO executable/model.' >&2; exit 2; }
+ [ -x "$BRIDGE" ] || { echo 'Missing yolo-results-bridge.' >&2; exit 2; }
+fi
+for command in ip media-ctl; do
+ command -v "$command" >/dev/null || { echo "Missing command: $command" >&2; exit 2; }
+done
+READY=${CAMERA_IMU_READY_FILE:-}
+[ -z "$READY" ] || [ ! -e "$READY" ] || { echo "Readiness file already exists: $READY" >&2; exit 2; }
+LOCK=/tmp/fpga-isp.lock
+mkdir "$LOCK" 2>/dev/null || { echo "ISP launcher already active; inspect $LOCK and stop its owner first." >&2; exit 2; }
+receiver=; detector=; swapper=; ready_owned=0; ready_temporary=; LOG_DIR=
+cleanup() {
+ trap - EXIT
+ trap '' INT TERM HUP
+ # 关闭任一视频写入端之前，先通知当前批次结束。
+ # 面板释放采集缓冲区，并确认本次切换。
+ if [ "$ready_owned" = 1 ]; then rm -f "$READY"; ready_owned=0; fi
+ if [ -n "$ready_temporary" ]; then rm -f "$ready_temporary"; ready_temporary=; fi
+ for child in "$detector" "$swapper" "$receiver"; do
+  if [ -n "$child" ]; then kill -TERM "$child" 2>/dev/null || :; fi
+ done
+ # 只清理本进程创建的直接子进程，按限定时间等待，不按名称批量结束进程。
+ remaining=0
+ while [ "$remaining" -lt 5 ]; do
+  live=0
+  for child in "$detector" "$swapper" "$receiver"; do
+   if [ -n "$child" ] && kill -0 "$child" 2>/dev/null; then live=1; fi
+  done
+  [ "$live" -ne 0 ] || break
+  remaining=$((remaining + 1)); sleep 1
+ done
+ for child in "$detector" "$swapper" "$receiver"; do
+  if [ -n "$child" ]; then
+   if kill -0 "$child" 2>/dev/null; then kill -KILL "$child" 2>/dev/null || :; fi
+   wait "$child" 2>/dev/null || :
+  fi
+ done
+ rm -f "$LOCK/pid" "$LOCK/yolo.ready" "$LOCK/swap.ready"
+ rmdir "$LOCK" 2>/dev/null || :
+ [ -z "$LOG_DIR" ] || echo "Camera logs retained: $LOG_DIR"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
+echo $$ >"$LOCK/pid"
+if [ -n "${CAMERA_IMU_LOG_DIR:-}" ]; then
+ LOG_DIR=$CAMERA_IMU_LOG_DIR
+ [ -d "$LOG_DIR" ] || { echo "Log directory not found: $LOG_DIR" >&2; exit 2; }
+else
+ LOG_DIR=$(mktemp -d /tmp/camera-yolo-session.XXXXXX)
+fi
+echo "Camera logs: $LOG_DIR"
+DETECTIONS=${CAMERA_IMU_DETECTIONS_FILE:-"$LOG_DIR/detections.latest"}
+rm -f "$DETECTIONS" "$DETECTIONS.tmp"
+if [ ! -d /sys/module/v4l2loopback ]; then
+ insmod "$BASE/v4l2loopback.ko" devices=3 video_nr=60,61,62 \
+  card_label=FPGA_Combined,FPGA_Left,FPGA_Right exclusive_caps=1,1,1 max_width=1920 max_height=1080
+fi
+for spec in "max_width:$WIDTH" "max_height:$HEIGHT"; do
+ parameter=${spec%:*}; required=${spec#*:}
+ available=$(cat "/sys/module/v4l2loopback/parameters/$parameter")
+ [ "$available" -ge "$required" ] || { echo "v4l2loopback $parameter=$available is too small; stop its existing consumers and review the module configuration." >&2; exit 2; }
+done
+preview=/dev/video62
+if [ "$USE_YOLO" = 1 ] || [ -n "${ACG_VISION_FRAME:-}" ]; then preview=/dev/video61; fi
+[ -c /dev/video62 ] || { echo "Missing /dev/video62 for camera half swap" >&2; exit 2; }
+[ -c "$preview" ] || { echo "Missing $preview for camera preview." >&2; exit 2; }
+# 共享链路在手动控制接口启动前已配置，相机重试时只检查链路，
+# 短暂ISP故障不应重置控制、IMU或底盘通信。
+sh "$APP_DIR/../check-fpga-link.sh" "${PHONE_FPGA_IFACE:-eth0}"
+# 沿用已验证的FakeCam设置，保持Weston运行。
+media-ctl -d /dev/media2 -V "\"rkisp-isp-subdev\":0[fmt:SBGGR8_1X8/${WIDTH}x${HEIGHT} crop:(0,0)/${WIDTH}x${HEIGHT}]"
+media-ctl -d /dev/media2 -l '"rkisp_rawrd2_s":0 -> "rkisp-isp-subdev":0[1]'
+ISP_MANUAL_WB=1 ISP_SHARP_OFF=1 ISP_GAMMA_LINEAR=1 ISP_V4L2_OUTPUT=/dev/video60 LD_LIBRARY_PATH="$PERF_BASE/fakecam/lib:$BASE/lib" \
+ "$ISP_PROBE" "$IQ" "$ARG" "$FRAMES" >"$LOG_DIR/isp.log" 2>&1 &
+receiver=$!
+sleep 2
+if ! kill -0 "$receiver" 2>/dev/null; then
+ rc=0; wait "$receiver" || rc=$?; receiver=
+ echo 'Capture ended before YOLO startup; inspect isp.log.' >&2
+ [ "$rc" -ne 0 ] || rc=9
+ exit "$rc"
+fi
+"$SWAPPER" /dev/video60 /dev/video62 "$LOCK/swap.ready" >"$LOG_DIR/camera-swap.log" 2>&1 &
+swapper=$!
+attempts=0
+while [ ! -f "$LOCK/swap.ready" ]; do
+ if ! kill -0 "$swapper" 2>/dev/null; then
+  echo 'Camera half swap failed; inspect camera-swap.log and isp.log.' >&2
+  tail -n 12 "$LOG_DIR/camera-swap.log" >&2
+  exit 9
+ fi
+ kill -0 "$receiver" 2>/dev/null || { echo 'ISP ended before the first swapped frame; inspect isp.log.' >&2; exit 9; }
+ attempts=$((attempts + 1))
+ [ "$attempts" -le 25 ] || { echo 'Camera half swap timed out; inspect camera-swap.log and isp.log.' >&2; exit 9; }
+ sleep 1
+done
+if [ "$USE_YOLO" = 1 ] || [ -n "${ACG_VISION_FRAME:-}" ]; then
+if [ "$USE_YOLO" = 1 ]; then
+"$BRIDGE" --snapshot "$DETECTIONS" --log "$LOG_DIR/yolo.log" -- \
+ "$YOLO" --model "$MODEL" --device /dev/video62 --frames 0 --no-save \
+ --display-device /dev/video61 --ready-file "$LOCK/yolo.ready" --log-every 30 \
+ >"$LOG_DIR/yolo-bridge.log" 2>&1 &
+else
+ # 关闭YOLO时仍保留单一采集入口及原始灰度帧导出。
+ "$YOLO" --no-detect --device /dev/video62 --display-device /dev/video61 \
+ --ready-file "$LOCK/yolo.ready" >"$LOG_DIR/yolo.log" 2>&1 &
+fi
+detector=$!
+attempts=0
+while [ ! -f "$LOCK/yolo.ready" ]; do
+ kill -0 "$swapper" 2>/dev/null || { echo "Camera half swap exited during YOLO startup" >&2; exit 9; }
+ kill -0 "$detector" 2>/dev/null || { echo 'YOLO startup failed; inspect yolo.log.' >&2; exit 9; }
+ kill -0 "$receiver" 2>/dev/null || { echo 'Capture ended before YOLO was ready; inspect isp.log.' >&2; exit 9; }
+ attempts=$((attempts + 1))
+ [ "$attempts" -le 30 ] || { echo 'YOLO startup timed out; inspect yolo.log.' >&2; exit 9; }
+ sleep 1
+done
+fi
+# 生产者及其选定节点就绪后，消费者即可打开采集设备。
+# 由camera-imu-panel核验采集帧，就绪标记本身不代表已有有效视频。
+for child in "$detector" "$swapper" "$receiver"; do
+ [ -n "$child" ] || continue
+ kill -0 "$child" 2>/dev/null || { echo 'Camera child exited at readiness boundary.' >&2; exit 8; }
+done
+if [ -n "$READY" ]; then
+ ready_temporary="$READY.$$"
+ printf '%s\n' "$preview" >"$ready_temporary"
+ mv "$ready_temporary" "$READY"
+ ready_temporary=
+ ready_owned=1
+fi
+echo "Camera producer ready (ISP_YOLO=$USE_YOLO): $preview. The panel must verify live frames."
+rc=0
+while kill -0 "$receiver" 2>/dev/null; do
+ kill -0 "$swapper" 2>/dev/null || { echo "Camera half swap exited; inspect camera-swap.log" >&2; exit 9; }
+ if [ -n "$detector" ] && ! kill -0 "$detector" 2>/dev/null; then echo 'YOLO exited early; inspect yolo.log.' >&2; exit 9; fi
+ sleep 1
+done
+wait "$receiver" || rc=$?
+receiver=
+tail -n 8 "$LOG_DIR/isp.log"
+exit "$rc"

@@ -1,0 +1,14 @@
+#!/bin/sh
+# 只读查看已有接收服务，不绑定其端口，也不发送控制请求。
+set -eu
+SELF=$(CDPATH= cd -P -- "$(dirname -- "$0")" && pwd)
+DIR=${ACG_PHONE_DIR:-/run/acg138-nearfield-s6-r8-sensors}
+printf 'MPU9250 diagnostics (updated about once per second):\n'
+if [ -r "$DIR/mpu9250-status.json" ]; then
+ cat "$DIR/mpu9250-status.json"
+else
+ echo "No diagnostic snapshot: $DIR/mpu9250-status.json; start this version with sh begin." >&2
+ exit 2
+fi
+printf '\nPosition/heading/distance/trace:\n'
+ACG_PHONE_DIR="$DIR" exec "$SELF/acg138-odometry-info"

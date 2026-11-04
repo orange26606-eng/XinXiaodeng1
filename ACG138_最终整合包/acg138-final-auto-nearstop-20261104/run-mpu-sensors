@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+sh "$root/setup-fpga-link.sh" "${ROBOT_FPGA_IFACE:-eth0}"
+[ -x "$root/lab-mpu9250-service" ] || chmod u+x "$root/lab-mpu9250-service"
+exec "$root/lab-mpu9250-service" --run --odom-config "$root/odometry.conf" --imu-config "$root/mpu9250.conf" --attitude-source "${IMU_ATTITUDE_SOURCE:-auto}" --state-dir "${ACG_PHONE_DIR:-/run/acg138-final-auto-nearstop-sensors}" "$@"

@@ -1,0 +1,7 @@
+/*
+* Slamtec LIDAR SDK
+*
+* sl_lidar.h
+*
+* Copyright (c) 2020 Shanghai Slamtec Co., Ltd.
+*/

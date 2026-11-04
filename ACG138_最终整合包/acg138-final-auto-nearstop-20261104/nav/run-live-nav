@@ -1,0 +1,72 @@
+#!/bin/sh
+# 单一进程管理实时建图和USB采集，手机、相机及IMU服务独立运行。
+set -eu
+root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+parent=$(CDPATH= cd -- "$root/.." && pwd)
+active=0
+if [ "${1:-}" = --run ]; then active=1;shift;fi
+option=1;drive=0
+for arg in "$@";do
+ if [ "$option" = 1 ];then
+  case "$arg" in
+   --enable-drive) drive=1;;
+   --passage-profile|--timing-profile|--output|--duration-s|--mount-x-m|--mount-y-m|--mount-yaw-deg) option=0;;
+   *) echo "Unsupported option: $arg; source, mode and ports are managed here." >&2;exit 2;;
+  esac
+ else option=1;fi
+done
+[ "$option" = 1 ] || { echo 'Missing option value.' >&2;exit 2; }
+: "${ACG_PHONE_DIR:=/run/acg138-final-auto-nearstop-sensors}"
+: "${LIDAR_DEVICE:=/dev/ttyUSB0}"
+: "${XDG_RUNTIME_DIR:=/run}"
+: "${WAYLAND_DISPLAY:=wayland-0}"
+export XDG_RUNTIME_DIR WAYLAND_DISPLAY
+if [ -z "${NAV_INTERFACE:-}" ];then
+ for netdev in /sys/class/net/*;do device=$(readlink -f "$netdev/device" 2>/dev/null || :);case "$device" in *fe1c0000.ethernet*) NAV_INTERFACE=${netdev##*/};break;;esac;done
+ NAV_INTERFACE=${NAV_INTERFACE:-eth0}
+fi
+app=$root/live-map-nav-panel
+snapshot=$ACG_PHONE_DIR/mpu9250.timed.snapshot
+if [ "$drive" = 1 ];then set -- "$@" --chassis-endpoint "ncv1://$NAV_INTERFACE/192.168.0.2:5012?config_id=823198465";fi
+set -- --passage-profile "$parent/passage.conf" --mpu-snapshot "$snapshot" --mode mapping-navigation --ls01-port 6212 --mpu-odometry "$parent/odometry.conf" --mpu-imu "$parent/mpu9250.conf" --duration-s 0 --timing-profile "$parent/map/config/real_mpu_timing_parallel_candidate.conf" "$@"
+if [ "$active" = 0 ];then exec "$app" --preflight "$@";fi
+"$app" --preflight "$@"
+[ -r "$snapshot" ] || { echo "Start sh run-mpu-sensors first: missing $snapshot" >&2;exit 2; }
+[ -c "$LIDAR_DEVICE" ] || { echo "Missing lidar serial device: $LIDAR_DEVICE" >&2;exit 2; }
+# 锁用于防止重复启动，旧建图程序应先停止，
+# 旧启动器未使用此锁。
+lock=${LIVE_NAV_LOCK:-/run/acg138-live-map-nav.lock}
+command -v flock >/dev/null 2>&1 || { echo 'flock is required for single-owner capture.' >&2;exit 2; }
+exec 9>"$lock"
+flock -n 9 || { echo 'Another live-map navigation session is already running.' >&2;exit 2; }
+logs=$(mktemp -d /tmp/acg138-final-auto-nearstop.XXXXXX)
+app_pid= lidar_pid=
+cleanup(){
+ trap - EXIT HUP INT TERM
+ # 先停止运动命令生成进程，其退出流程会解除使能；即使进程异常，
+ # FPGA也会独立检查命令期限并在超时后停止输出。
+ if [ -n "$app_pid" ];then kill "$app_pid" 2>/dev/null || :;wait "$app_pid" 2>/dev/null || :;fi
+ if [ -n "$lidar_pid" ];then kill "$lidar_pid" 2>/dev/null || :;wait "$lidar_pid" 2>/dev/null || :;fi
+ echo "Navigation/USB closed. Sensor and phone services retained. Logs/map: $logs"
+}
+trap cleanup EXIT
+trap 'exit 130' HUP INT TERM
+echo "Logs: $logs"
+echo 'LIVE MAP + SCREEN GOALS; experimental timing; no automatic ARM.'
+[ "$drive" = 0 ] || echo 'Drive capable: explicit phone START, fresh sensors, tracking or continuing fresh IMU+encoder odometry are required; S6 R6路线优先持续探索，须匹配120RPM新版FS：NCV3/status5/CFG0x31110301；原地转78RPM，PWM上限1750。'
+"$app" --run --save-map "$logs/map.rmap" "$@" >>"$logs/navigation.log" 2>&1 &
+app_pid=$!
+sleep 1
+if ! kill -0 "$app_pid" 2>/dev/null;then cat "$logs/navigation.log";exit 1;fi
+"$parent/map/lidar-usb-timed" --device "$LIDAR_DEVICE" --host 127.0.0.1 --port 6212 >>"$logs/lidar.log" 2>&1 &
+lidar_pid=$!
+while kill -0 "$app_pid" 2>/dev/null;do
+ if ! kill -0 "$lidar_pid" 2>/dev/null;then cat "$logs/lidar.log";exit 1;fi
+ sleep 1
+done
+set +e
+wait "$app_pid";result=$?
+set -e
+app_pid=
+cat "$logs/navigation.log"
+exit "$result"

@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "config_id_hex": "31110301",
+  "software_policy": 9,
+  "front_observe_mm": 100,
+  "front_near_mm": 50,
+  "front_forward_stop_mm": 30,
+  "front_emergency_mm": 20,
+  "front_release_mm": 40,
+  "front_release_samples": 2,
+  "side_turn_mm": 30,
+  "side_straight_emergency_mm": 15,
+  "body_buffer_mm": 10,
+  "max_linear_m_s": 0.4,
+  "reverse_speed_m_s": 0.2,
+  "reverse_target_m": 0.12,
+  "reverse_hard_m": 0.15,
+  "reverse_min_fit_m": 0.1,
+  "reverse_max_ms": 1200,
+  "action_geometry_budget_us": 40000,
+  "cycle_geometry_budget_us": 80000,
+  "brake_m_s2": 0.45,
+  "speed_bands": [
+    [
+      400,
+      0.4
+    ],
+    [
+      200,
+      0.25
+    ],
+    [
+      100,
+      0.15
+    ],
+    [
+      50,
+      0.08
+    ],
+    [
+      30,
+      0.05
+    ]
+  ],
+  "ignore_zero": true,
+  "command_ttl_ms": 500
+}

@@ -1,0 +1,50 @@
+ACV1 v1 - authenticated H.264 access-unit transport
+
+GET /api/video.h264
+Authorization: Bearer <existing pairing password>
+X-Rover-Session: <32 hexadecimal characters from existing /api/session>
+
+HTTP 200 Content-Type: application/x-acg138-h264, Connection: close.
+There is one binary stream, no HTTP frame polling/Base64/JPEG in the new APK.
+The video endpoint cannot acquire, renew or send a control session/command.
+Invalid authorization/session: 401; second stream: 409; codec disabled: 503.
+
+Each access unit has a 40-byte big-endian header followed by an Annex B payload:
+offset  size  field
+0       4     ASCII ACV1
+4       2     header size = 40
+6       2     flags: bit 0 SPS+PPS, bit 1 IDR
+8       4     payload length, 1..2097152 bytes
+12      4     encoded serial, low 32 bits; natural wrap permitted
+16      8     shared export monotonic timestamp in milliseconds
+24      8     encode completion monotonic timestamp in milliseconds
+32      2     width = 1280
+34      2     height = 720
+36      4     target frame rate x1000 = 30000
+
+Timestamps are from the board's monotonic clock. The export timestamp is not a
+sensor exposure timestamp. It is not comparable directly with a phone wall clock.
+No claim of measured glass-to-glass latency follows from either timestamp.
+
+Producer: original annotated NV12 stereo 1920x1080, seqlock snapshot, only new
+sequences. Downsample to NV12 1280x720, MPP Baseline level3.1, CBR target4Mbps,
+GOP30, no B frames. Only one input is in flight per encoder invocation. A private
+startup test verifies SPS/PPS/IDR but is never published or counted as video FPS.
+
+Bounded pressure: 4 encoded AU slots, source/export age limit200ms, TCP send
+deadline100ms, small per-client send buffer, exactly one video client. Missing
+ring slots request a fresh IDR; partial/slow sends terminate the connection.
+On reconnect the stream starts at a newly encoded keyframe including SPS/PPS.
+An inactive client lease terminates video; video never keeps a vehicle moving.
+
+Phone: bounded parser, 2MiB maximum AU, strict header and SPS/PPS/IDR checks;
+hardware MediaCodec selection, low-latency feature requested when supported;
+independent output drain and immediate Surface render. TextureView is placed
+behind a transparent camera area in the original WebView. Original eye selection
+and all control gestures remain in the WebView. Decoder pressure/loss reconnects
+from IDR; control networking never waits for decoder work.
+
+Host tests validate wire compatibility and pressure behavior using an explicitly
+selected SDK ABI test double and a valid FFmpeg AVC fixture. The production
+launcher selects only its packaged ARM64 MPP library. Device codec support and
+sustained speed must be checked on the target hardware.

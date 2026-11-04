@@ -1,0 +1,134 @@
+{
+  "status": "PASS",
+  "source_version": "6cls_yolo11n_personnew epoch124of150 supplied20261103",
+  "source_onnx_sha256": "1d57e41b12de3f81c0bdb52b490a82dd4fbe953df163161b4a4f062a01b61ce5",
+  "classes": [
+    "person",
+    "cup",
+    "cell_phone",
+    "bottle",
+    "box",
+    "remote"
+  ],
+  "default_profile": "custom6-new",
+  "default_model": "runtime/model/personnew-int8.rknn",
+  "fallback_model": "runtime/model/personnew-fp16.rknn",
+  "old_models_preserved": [
+    "coco80",
+    "custom6"
+  ],
+  "actual_conversion": true,
+  "learned_tensors_unchanged_by_graph_surgery": true,
+  "RKNN_output_count": 9,
+  "outputs": [
+    {
+      "name": "reg_s8",
+      "shape": [
+        1,
+        64,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "cls_s8",
+      "shape": [
+        1,
+        6,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "sum_s8",
+      "shape": [
+        1,
+        1,
+        80,
+        80
+      ]
+    },
+    {
+      "name": "reg_s16",
+      "shape": [
+        1,
+        64,
+        40,
+        40
+      ]
+    },
+    {
+      "name": "cls_s16",
+      "shape": [
+        1,
+        6,
+        40,
+        40
+      ]
+    },
+    {
+      "name": "sum_s16",
+      "shape": [
+        1,
+        1,
+        40,
+        40
+      ]
+    },
+    {
+      "name": "reg_s32",
+      "shape": [
+        1,
+        64,
+        20,
+        20
+      ]
+    },
+    {
+      "name": "cls_s32",
+      "shape": [
+        1,
+        6,
+        20,
+        20
+      ]
+    },
+    {
+      "name": "sum_s32",
+      "shape": [
+        1,
+        1,
+        20,
+        20
+      ]
+    }
+  ],
+  "toolkit_version": "2.0.0b0+9bab5682",
+  "quantized": true,
+  "quantization_calibration_images": 400,
+  "simulator_reference_boxes": 23,
+  "simulator_int8_matches_sameclass_iou70": 22,
+  "simulator_fp16_matches_sameclass_iou70": 23,
+  "simulator_NMS_threshold": 0.25,
+  "production_new_profile_threshold": 0.1,
+  "production_new_profile_sum_gate": false,
+  "board_tested": false,
+  "quantized_MAP_measured": false,
+  "RK3588_fps_measured": false,
+  "live_camera_accuracy_tested": false,
+  "benchmark_fixture": {
+    "format": "NV12 limitedBT6011920x1080",
+    "bytes": 3110400,
+    "source_images": [
+      {
+        "file": "007f27d0bf53.jpg",
+        "sha256": "67f963dbec4dd46ec7bc49110ffeeb2a0a67f6f13f5b98493f2eb60d57be6868"
+      },
+      {
+        "file": "B_valid_000000016285_jpg.rf.8d30b1656a9f40d27769e8b58356638c.jpg",
+        "sha256": "8d70934cce9da20b45e617691975bed50397899b001b2a25f4fa3449ddde16f8"
+      }
+    ],
+    "purpose": "same fixed prerecorded positive scene for relative throughput; not live cameraFPS or mAP"
+  }
+}

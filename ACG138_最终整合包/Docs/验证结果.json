@@ -1,0 +1,131 @@
+{
+  "status": "PASS_LOCAL_CHECKS",
+  "release_date": "2026-11-04",
+  "FPGA": {
+    "bitstream": "FPGA/phone_robot_final_auto_nearstop.fs",
+    "sha256": "78a55ea388a3af2670ccc690cabedfdb10f6e4cd384056044586f10f20fd8c4d",
+    "setup_hold": {
+      "Setup": [
+        "0"
+      ],
+      "Hold": [
+        "0"
+      ]
+    },
+    "minimum_reported_slack_ns": 0.031,
+    "external_IO_timing_signed_off": false,
+    "source_program_tokens_identical": true
+  },
+  "RTL": {
+    "auto_groups": 11,
+    "routing_groups": 10,
+    "tests": [
+      "tb_nearstop_fsm",
+      "tb_nearstop_context",
+      "tb_auto_channel",
+      "tb_auto_history",
+      "tb_auto_directional",
+      "tb_turnfirst_wrap",
+      "tb_turnfirst_fsm",
+      "tb_nearstop_system",
+      "tb_merge_isolation",
+      "tb_merge_uart",
+      "tb_merge_remote",
+      "tb_route_udp_tx",
+      "tb_route_status_link",
+      "tb_route_age",
+      "tb_route_motion",
+      "tb_route_controller",
+      "tb_route_receivers",
+      "tb_route_status_00",
+      "tb_route_status_01",
+      "tb_route_status_10",
+      "tb_route_status_11"
+    ]
+  },
+  "software": {
+    "smooth_turn_checks": 106,
+    "virtual_chassis_checks": 573,
+    "semantic_chain_checks": 19,
+    "phone_AUTO_transaction_checks": 36,
+    "AArch64_build_verified": true,
+    "phone_AUTO_client_checks": 35,
+    "semantic_cancel_barrier_cases": 4,
+    "AUTO_start_order_and_TTL_agreement": "PASS"
+  },
+  "APK": {
+    "status": "PASS_BUILD_SIGNATURE_AND_RESOURCE_CHECKS",
+    "version_code": 67,
+    "APK_sha256": "d9066bbba5c1e946773f401e66c5e35b166f47f0e2a7759786c153ff97c38ce4",
+    "same_signing_certificate": true,
+    "certificate_sha256": "de9e163eac6c0f2231e1041c095c6a71f52a37ef01c79dcf1a0b6391fd9ab735",
+    "assets_and_native_entries_unchanged": 22,
+    "full_java_source_compiled": true,
+    "vehicle_AUTO_test": "USER_CONFIRMED_ENTRY_AND_BOARD_AUTONOMOUS_LOGS",
+    "installed_in_prior_session": true
+  },
+  "shell_syntax_checked": 42,
+  "entry": "sh begin drive",
+  "source_consistency": {
+    "compiled_sources_checked": 689,
+    "python_sources_checked": 40,
+    "runtime_ELF_checked": 21,
+    "runtime_executable_instructions_identical": true,
+    "source_link_stub_loaded_sections_identical": true,
+    "APK67_byte_identical": true,
+    "FS_byte_identical": true,
+    "console_help_labels_standardized": true
+  },
+  "AUTO_board_check": {
+    "prepare_consume_controller_transactions": 2,
+    "AUTONOMOUS_state_observed": true,
+    "user_confirmed": true,
+    "full_vehicle_performance_retest": false,
+    "scope": "prior_session_evidence"
+  },
+  "release": "R5_APK67",
+  "paper_marker_detection": false,
+  "R3_local_verification": {
+    "AUTO_client_checks_rerun": 35,
+    "cancel_barrier_cases_rerun": 4,
+    "start_order_and_TTL_agreement": "PASS",
+    "text_items_scanned": 1015,
+    "archive_members_scanned": 1159,
+    "board_accessed": false,
+    "motor_commands_sent": false
+  },
+  "supervisor": {
+    "phase_tests_inherited_from_R2": 96,
+    "scripts_byte_identical_to_R2": true
+  },
+  "previous_R4_verification": {
+    "changes": "documentation_and_release_metadata",
+    "source_and_program_payloads_identical_to_R3": true,
+    "FPGA_project_Verilog_files": 69,
+    "FPGA_project_headers": 1,
+    "board_test_performed": false
+  },
+  "R5_source_review": {
+    "status": "PASS",
+    "changed_files": 497,
+    "translated_comments": 2390,
+    "changed_compilation_and_style_units_verified": 397,
+    "changed_Python_AST_verified": 23,
+    "JavaScript_syntax_checked": 10,
+    "shell_syntax_checked": 42,
+    "configuration_files_verified": 25,
+    "other_markup_files_verified": 0,
+    "unchanged_files": 532,
+    "noncomment_text_exact": true,
+    "line_counts_preserved": true,
+    "compiler_and_generator_markers_preserved": true,
+    "encrypted_IP_preserved": true,
+    "APK67_byte_identical": true,
+    "bitstream_byte_identical": true,
+    "runtime_executables_and_models_byte_identical": true,
+    "board_test_performed": false,
+    "AUTO_transaction_checks": 35,
+    "cancel_barrier_cases": 4,
+    "third_party_licenses_and_SDK_originals_retained": true
+  }
+}

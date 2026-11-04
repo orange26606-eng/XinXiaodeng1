@@ -1,0 +1,16 @@
+{
+  "release": "ACG138_final_delivery_r5_APK67_20261104",
+  "runtime": "acg138-final-auto-nearstop-20261104",
+  "entry": "sh begin drive",
+  "APK_version_code": 67,
+  "APK_sha256": "d9066bbba5c1e946773f401e66c5e35b166f47f0e2a7759786c153ff97c38ce4",
+  "FS_sha256": "78a55ea388a3af2670ccc690cabedfdb10f6e4cd384056044586f10f20fd8c4d",
+  "FPGA_config_id": "0x31110301",
+  "command_watchdog_ms": 500,
+  "phone_server_sha256": "f69bd1eb5161043ec9497ab3632d4a252934e6db13360da7ccb0333a5cf1f204",
+  "panel_sha256": "cd3acae48db84162a16d1f1a8dfea2f89ee746da70eef0b0279a76780b891276",
+  "physical_test": "AUTO_ENTRY_CONFIRMED_FULL_VEHICLE_NOT_RETESTED",
+  "APK_file": "Android/ACG138-Rover-v1.37.1-auto-fix.apk",
+  "symbols": "stripped",
+  "paper_marker_detection": false
+}

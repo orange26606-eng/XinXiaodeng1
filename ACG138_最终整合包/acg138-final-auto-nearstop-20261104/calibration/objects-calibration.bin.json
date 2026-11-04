@@ -1,0 +1,27 @@
+{
+  "format": "OSD1",
+  "source": "acg138_object_stereo_s3_20261101\\calibration\\measured\\stereo-initial-fit.npz",
+  "source_sha256": "331c7b611c69107861e8cc58f5791db538021d45de2f26d7f39ae7a901c192bf",
+  "runtime_sha256": "26aaa15131db401f314a2ef2ffbd91681f2623a053f64459444a5d47bcb35405",
+  "rms_px": 1.5275109307479617,
+  "max_rms_px": 2,
+  "quality": "EXPERIMENTAL_COARSE",
+  "original_size": [
+    960,
+    1080
+  ],
+  "rectified_size": [
+    240,
+    270
+  ],
+  "scale": 0.25,
+  "physical_left_image_eye": 0,
+  "baseline_m": 0.0348639305663788,
+  "time_source": "RK_DEQUEUE",
+  "exposure_synchronized": false,
+  "camera_mount_verified": false,
+  "hardware_accuracy_verified": false,
+  "physical_side_verified": true,
+  "algorithm": "runtime Census5x5 + four-path SGM, not OpenCV StereoSGBM",
+  "bytes": 1037192
+}

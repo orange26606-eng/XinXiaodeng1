@@ -1,0 +1,41 @@
+六类检测模型与相机流水线
+
+模型
+默认模型为personnew-int8.rknn，源文件best.onnx的SHA256为1d57e41b12de3f81c0bdb52b490a82dd4fbe953df163161b4a4f062a01b61ce5。
+类别编号0至5依次为person、cup、cell_phone、bottle、box、remote。类别表与模型输出必须配套。
+INT8模型采用三尺度九输出，每个尺度包含DFL64、类别6和sum1。转换保留学习权重，将坐标和概率分开量化。
+默认启动配置custom6-new对应新模型。旧custom6使用不同输出格式，不能混用。现有运行目录只包含清单列出的模型，使用前确认文件存在。
+
+转换检查
+量化使用400张校准图，预处理为RGB、nearest letterbox114、mean0和std255。
+8张校准图的逐锚点比较显示FP32图切分一致。x86 RKNN模拟器在NMS阈值0.25下产生23个参考框，INT8同类IoU不小于0.7的匹配为22个，FP16为23个。
+运行检测阈值为0.10。上述比较不覆盖全部低分检测，也不能代替板端mAP测试。
+
+图像处理
+1. 两个推理槽与三个NPU Context处理双眼图像，左右眼来自同一完整NV12源帧。
+2. V4L2读取时丢弃有界数量的旧帧，保留最新有效帧，并记录驱动丢帧和错误帧。UDP6102由独立接收端处理。
+3. 原始灰度和完整检测结果各有独立发布线程，每个线程保留一个执行项和一个最新待处理项，后到数据替换待处理旧项。
+4. 检测快照使用所属推理槽的灰度图，双眼处理完成后发布，保留原epoch、sequence和源时间，拒绝旧帧覆盖新帧。
+5. AArch64 NEON预处理保持floor-index取样、补边和色彩范围一致。16,777,216种YUV及80,000组混合像素的指令检查通过。
+6. 主屏绘制在推理状态锁外执行。主屏可将500ms以内的旧框叠加到视频；实物抓拍仍按源帧关联。两眼没有硬件曝光同步。
+7. RKNN释放失败后避免重复释放。模型加载、张量形状、类别和数据长度异常均输出实际值与预期值。
+
+日志
+MODEL_LOAD、MODEL_IO、MODEL_INPUT、MODEL_OUTPUT记录profile、模型哈希、SDK、驱动、NPU核心和张量参数。
+MODEL_TIMING记录预处理、输入设置、NPU、输出读取、解码和释放的平均及最大耗时。
+CAPTURE_TIMING记录采集等待、复制、原图提交、画框和preview_write耗时。
+PUBLISH_TIMING记录灰度及检测快照的发布耗时、源帧号、源时刻与发布时年龄。
+VIDEO_DETECTION记录检测年龄、V4L2旧帧丢弃、缓存替换和乱序拒绝。
+指标每秒输出。独立运行未提供ACG_MODEL_SHA256时，模型哈希显示NOT_PROVIDED。
+
+固定图像推理基准
+已有RK3588测试采用同一NV12输入、120组双眼，COCO80为15.437组/秒，新INT8为24.446组/秒，FP16为14.517组/秒。INT8吞吐相对COCO80提高约58.4%。测试环境runtime2.0.0b0、driver0.9.8。
+以上为固定输入的预处理、推理、解码和合并吞吐，不包括实时相机、ISP和显示链路。远处小目标召回、实时显示帧率和端到端延迟仍需现场测量。
+
+复测
+先在RK运行目录停止会话，避免争用NPU。
+sh begin stop
+ACG_YOLO_PROFILE=custom6-new camera/yolo11-pipeline --model model/personnew-int8.rknn --benchmark-pipeline --benchmark-nv12 model/benchmark-personnew.nv12 --iterations 120
+需要比较其他模型时，将profile与模型路径同时替换为对应配置。基准模式输出BENCHMARK stereo_fps，不打开视频节点，不发布感知数据，也不发送电机命令。
+
+源码入口为Source/tools/build_new_yolo.py和Source/tools/test_new_model_neon.py。包内模型及输入的哈希见运行目录model/SHA256SUMS.txt。训练图片、转换虚拟机和历史测试日志未随包提供。

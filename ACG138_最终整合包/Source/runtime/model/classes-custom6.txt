@@ -1,0 +1,6 @@
+person
+cup
+cell_phone
+bottle
+box
+remote

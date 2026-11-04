@@ -1,0 +1,25 @@
+#!/bin/sh
+# 只读诊断，不发送控制、会话或电机请求，不打印凭据。
+set -u
+APP=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+RUN=${ROBOT_RUN_DIR:-/run/acg138-nearfield-s6-r8-app}
+DATA=${ACG_PHONE_DIR:-/run/acg138-final-auto-nearstop-sensors}
+printf 'S6诊断 software_policy=9 fpga_policy=5 CFG=0x31110301 status=5 command=3\n'
+printf '\nA 地图文件发布年龄（不同于原始观测年龄）\n'
+if [ -f "$DATA/navigation-map.json" ];then
+ now=$(date +%s);stamp=$(stat -c %Y "$DATA/navigation-map.json" 2>/dev/null || printf 0)
+ printf 'map_file_age_s=%s size=' "$((now-stamp))";wc -c < "$DATA/navigation-map.json"
+else printf 'MAP_FILE_MISSING\n';fi
+printf '\nB/C 格式与HTTP会话：读取手机日志中的具体MAP_HTTP_ERROR/SESSION_EXPIRED，不能只扩大显示年龄\n'
+printf '\nD 进程状态\n'
+sh "$APP/begin" status
+printf '\nE 原始源/近场/命令状态（残留JSON不证明进程运行）\n'
+if [ -r "$DATA/navigation-motion.json" ];then head -c 16384 "$DATA/navigation-motion.json";printf '\n';fi
+printf '\nF Wi-Fi网口与板内接口（只读）\n'
+ip -4 addr show dev wlan0 2>/dev/null || :
+ip -4 addr show dev eth0 2>/dev/null || :
+printf '\nG 资源\n'
+df -h "$APP" /tmp 2>/dev/null || :
+free -m 2>/dev/null || :
+dmesg 2>/dev/null | grep -Ei 'out of memory|oom-kill|I/O error|No space left' | tail -n 8 || :
+printf '\n诊断不自动重启、不清除状态、不发送运动命令。\n'
